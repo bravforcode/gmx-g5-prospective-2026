@@ -126,3 +126,20 @@ def test_primary_phase_persists_before_chain_probe(monkeypatch, tmp_path):
 def test_ratio_has_no_float_rounding():
     assert collector.ratio(1, 2) == "0.5"
     assert collector.ratio(100, 100) == "1"
+
+
+def test_final_pass_is_retracted_if_fixed_time_receipt_missing(monkeypatch, tmp_path):
+    class AfterWindow(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return cls(2026, 10, 4, 1, tzinfo=tz)
+
+    monkeypatch.setattr(collector, "datetime", AfterWindow)
+    result_dir = tmp_path / "results"
+    collector.write_json(result_dir / "g5_final.json", {"primary_status": "pass"})
+
+    collector.maybe_finalize(tmp_path / "receipts", result_dir)
+
+    result = collector.read_json(result_dir / "g5_final.json")
+    assert result["primary_status"] == "inconclusive"
+    assert result["complete_receipts"] == 0
