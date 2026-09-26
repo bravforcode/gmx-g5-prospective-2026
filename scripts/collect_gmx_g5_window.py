@@ -333,12 +333,6 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         else "partial_or_unavailable"
     )
     previous_final = read_json(final_path)
-    if previous_final.get("primary_status") in {"pass", "not_pass"}:
-        if previous_final.get("independent_chain_validation") != independent_status:
-            previous_final["independent_chain_validation"] = independent_status
-            previous_final["chain_validation_updated_at_utc"] = now_iso()
-            write_json(final_path, previous_final)
-        return
     if any(receipt.get("status") != "primary_complete" for receipt in receipts):
         write_json(
             final_path,
@@ -351,6 +345,20 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "checked_at_utc": now_iso(),
             },
         )
+        return
+    if previous_final.get("primary_status") in {"pass", "not_pass"}:
+        if previous_final.get("independent_chain_validation") != independent_status:
+            previous_final["independent_chain_validation"] = independent_status
+            previous_final["time_to_stable_independent_utc"] = next(
+                (
+                    r["snapshot_utc"]
+                    for r in receipts[1:]
+                    if r.get("independent", {}).get("status") == "complete"
+                ),
+                None,
+            )
+            previous_final["chain_validation_updated_at_utc"] = now_iso()
+            write_json(final_path, previous_final)
         return
     try:
         metrics = analyze(BASELINE, END)
