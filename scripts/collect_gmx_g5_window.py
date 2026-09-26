@@ -252,12 +252,12 @@ def collect_independent(
     return {"status": "unavailable", "checked_at_utc": now_iso(), "rpc_failures": failures}
 
 
-def process_day(day: date, output_dir: Path) -> dict[str, Any]:
+def process_day(day: date, output_dir: Path, *, defer_independent: bool = False) -> dict[str, Any]:
     path = output_dir / f"{day.isoformat()}.json"
     previous = read_json(path)
     attempts = list(previous.get("attempts", []))
     if previous.get("status") == "primary_complete":
-        if previous.get("independent", {}).get("status") == "complete":
+        if defer_independent or previous.get("independent", {}).get("status") == "complete":
             return previous
         independent = collect_independent(
             day,
@@ -306,6 +306,8 @@ def process_day(day: date, output_dir: Path) -> dict[str, Any]:
         "independent": {"status": "pending"},
     }
     write_json(path, receipt)
+    if defer_independent:
+        return receipt
     independent = collect_independent(
         day,
         primary["oi_block"],
@@ -400,12 +402,25 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("receipts"))
     parser.add_argument("--result-dir", type=Path, default=Path("results"))
     parser.add_argument("--pilot-day", type=date.fromisoformat)
+    parser.add_argument(
+        "--phase", choices=("primary", "independent", "finalize", "all"), default="all"
+    )
     args = parser.parse_args()
     check_protocol()
     if args.pilot_day:
         if args.pilot_day != date(2026, 9, 26):
             raise SystemExit("only the disclosed Sep 26 pilot is accepted for a test run")
-        receipt = process_day(args.pilot_day, args.output_dir / "pilot")
+        if args.phase == "finalize":
+            raise SystemExit("pilot cannot enter the final-window phase")
+        pilot_dir = args.output_dir / "pilot"
+        if args.phase in {"primary", "all"}:
+            process_day(args.pilot_day, pilot_dir, defer_independent=True)
+        if args.phase in {"independent", "all"}:
+            existing = read_json(pilot_dir / f"{args.pilot_day.isoformat()}.json")
+            if existing.get("status") != "primary_complete":
+                raise SystemExit("pilot primary receipt missing or incomplete")
+            process_day(args.pilot_day, pilot_dir)
+        receipt = read_json(pilot_dir / f"{args.pilot_day.isoformat()}.json")
         print(json.dumps({"date": args.pilot_day.isoformat(), "status": receipt["status"]}))
         return
     now = datetime.now(UTC)
@@ -417,8 +432,20 @@ def main() -> None:
         for offset in range(8)
         if utc_midnight(BASELINE + timedelta(days=offset)) <= now.timestamp()
     ]
-    statuses = {day.isoformat(): process_day(day, args.output_dir)["status"] for day in due}
-    maybe_finalize(args.output_dir, args.result_dir)
+    if args.phase in {"primary", "all"}:
+        for day in due:
+            process_day(day, args.output_dir, defer_independent=True)
+    if args.phase in {"independent", "all"}:
+        for day in due:
+            existing = read_json(args.output_dir / f"{day.isoformat()}.json")
+            if existing.get("status") == "primary_complete":
+                process_day(day, args.output_dir)
+    if args.phase in {"finalize", "all"}:
+        maybe_finalize(args.output_dir, args.result_dir)
+    statuses = {
+        day.isoformat(): read_json(args.output_dir / f"{day.isoformat()}.json").get("status")
+        for day in due
+    }
     print(json.dumps({"at_utc": now_iso(), "daily_statuses": statuses}, sort_keys=True))
 
 
