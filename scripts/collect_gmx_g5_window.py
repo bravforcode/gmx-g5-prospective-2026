@@ -53,6 +53,10 @@ def check_protocol() -> None:
         raise RuntimeError(f"frozen protocol SHA-256 mismatch: {actual}")
 
 
+def code_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def write_json(path: Path, value: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
@@ -148,6 +152,10 @@ def collect_primary(day: date) -> dict[str, Any]:
         "snapshot_utc": datetime.fromtimestamp(timestamp, UTC).isoformat(),
         "retrieved_at_utc": now_iso(),
         "source": "https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql",
+        "collector_code_sha256": code_hash(Path(__file__)),
+        "audit_code_sha256": code_hash(Path(__file__).with_name("audit_gmx_g5_public.py")),
+        "position_fields": POSITION_FIELDS,
+        "oi_fields": OI_FIELDS,
         "position_count": position_count,
         "position_pages": position_pages,
         "graphql_request_attempts": REQUEST_LOG[request_log_start:],
@@ -164,7 +172,13 @@ def collect_primary(day: date) -> dict[str, Any]:
     }
 
 
-def collect_independent(day: date, block: int, expected: int) -> dict[str, Any]:
+def collect_independent(
+    day: date,
+    block: int,
+    expected: int,
+    expected_oi_raw: str,
+    expected_position_raw: str,
+) -> dict[str, Any]:
     failures: list[dict[str, str]] = []
     command = [
         sys.executable,
@@ -210,11 +224,18 @@ def collect_independent(day: date, block: int, expected: int) -> dict[str, Any]:
                 and proof["position_value_mismatches"] == 0,
                 "count_alignment": proof["oi_market_rows"] == proof["indexer_oi_market_count"]
                 and proof["indexer_position_count"] == expected,
+                "primary_amount_alignment": str(proof["oi_total_indexer_raw"])
+                == expected_oi_raw
+                and str(proof["indexer_position_size_total_raw"])
+                == expected_position_raw,
             }
             return {
                 "status": "complete" if all(checks.values()) else "failed_checks",
                 "checked_at_utc": now_iso(),
                 "rpc_url": rpc_url,
+                "probe_code_sha256": code_hash(
+                    Path(__file__).with_name("probe_gmx_onchain_position_set.py")
+                ),
                 "checks": checks,
                 "proof": proof,
                 "prior_rpc_failures": failures,
@@ -238,7 +259,13 @@ def process_day(day: date, output_dir: Path) -> dict[str, Any]:
     if previous.get("status") == "primary_complete":
         if previous.get("independent", {}).get("status") == "complete":
             return previous
-        independent = collect_independent(day, previous["oi_block"], previous["position_count"])
+        independent = collect_independent(
+            day,
+            previous["oi_block"],
+            previous["position_count"],
+            previous["indexer_oi_raw"],
+            previous["position_notional_raw"],
+        )
         attempts.append(
             {"at_utc": now_iso(), "stage": "independent", "status": independent["status"]}
         )
@@ -279,7 +306,13 @@ def process_day(day: date, output_dir: Path) -> dict[str, Any]:
         "independent": {"status": "pending"},
     }
     write_json(path, receipt)
-    independent = collect_independent(day, primary["oi_block"], primary["position_count"])
+    independent = collect_independent(
+        day,
+        primary["oi_block"],
+        primary["position_count"],
+        primary["indexer_oi_raw"],
+        primary["position_notional_raw"],
+    )
     receipt["independent"] = independent
     attempts.append({"at_utc": now_iso(), "stage": "independent", "status": independent["status"]})
     write_json(path, receipt)
