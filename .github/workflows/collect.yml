@@ -29,25 +29,50 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install on-chain hashing dependency
-        run: python -m pip install pycryptodome==3.23.0
-      - name: Collect fixed-time data or run pre-window pilot
+      - name: Install pinned dependencies
+        run: python -m pip install pycryptodome==3.23.0 pytest==9.1.1
+      - name: Check collector and ABI decoding offline
+        run: python -m pytest -q tests/test_gmx_window_collector.py tests/test_gmx_onchain_probe.py
+      - name: Retrieve all due primary snapshots first
         env:
           PILOT: ${{ inputs.pilot }}
         run: |
           if [ "$PILOT" = 'true' ]; then
-            python -m scripts.collect_gmx_g5_window --pilot-day 2026-09-26
+            python -m scripts.collect_gmx_g5_window --pilot-day 2026-09-26 --phase primary
           else
-            python -m scripts.collect_gmx_g5_window
+            python -m scripts.collect_gmx_g5_window --phase primary
           fi
-      - name: Commit non-identifying receipts
+      - name: Preserve primary receipts before slower chain reads
+        run: bash deployment/g5-remote/commit-receipts.sh
+      - name: Compute final primary result when window complete
+        env:
+          PILOT: ${{ inputs.pilot }}
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          if git diff --cached --quiet; then
-            echo 'No receipt changes.'
-            exit 0
+          if [ "$PILOT" != 'true' ]; then
+            python -m scripts.collect_gmx_g5_window --phase finalize
           fi
-          git commit -m 'Record fixed-window G5 aggregate receipt'
-          git push
+      - name: Preserve final primary result
+        run: bash deployment/g5-remote/commit-receipts.sh
+      - name: Run independent same-block chain checks
+        env:
+          PILOT: ${{ inputs.pilot }}
+        run: |
+          if [ "$PILOT" = 'true' ]; then
+            python -m scripts.collect_gmx_g5_window --pilot-day 2026-09-26 --phase independent
+          else
+            python -m scripts.collect_gmx_g5_window --phase independent
+          fi
+      - name: Preserve chain-check receipts
+        if: always()
+        run: bash deployment/g5-remote/commit-receipts.sh
+      - name: Refresh final chain-validation status
+        if: always()
+        env:
+          PILOT: ${{ inputs.pilot }}
+        run: |
+          if [ "$PILOT" != 'true' ]; then
+            python -m scripts.collect_gmx_g5_window --phase finalize
+          fi
+      - name: Preserve final status
+        if: always()
+        run: bash deployment/g5-remote/commit-receipts.sh
