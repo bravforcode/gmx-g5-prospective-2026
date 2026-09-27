@@ -306,6 +306,7 @@ def _window(monkeypatch, tmp_path, *, position=70, refetch_position=None,
         raise AssertionError(field)
 
     monkeypatch.setattr(audit, "fetch_connection", connection)
+    monkeypatch.setattr(collector, "fetch_connection", connection)
     return receipts, results
 
 
@@ -391,6 +392,52 @@ def test_no_complete_primary_day_reports_not_achieved(monkeypatch, tmp_path):
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
     assert final["time_to_stable_primary_utc"] == "not achieved"
+
+
+def test_incomplete_later_receipt_refetches_earlier_days_before_stability(
+    monkeypatch, tmp_path
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    first_path = receipts / "2026-09-28.json"
+    first = collector.read_json(first_path)
+    first["position_count"] += 1
+    collector.write_json(first_path, first)
+    missing_path = receipts / "2026-09-30.json"
+    missing = collector.read_json(missing_path)
+    missing["status"] = "primary_incomplete"
+    collector.write_json(missing_path, missing)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00"
+    assert any(
+        item["date_utc"] == "2026-09-28"
+        for item in final["partial_refetch_errors"]
+    )
+
+
+def test_incomplete_window_does_not_certify_unavailable_refetch(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    for offset in range(2, 8):
+        path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+        receipt = collector.read_json(path)
+        receipt["status"] = "primary_incomplete"
+        collector.write_json(path, receipt)
+    monkeypatch.setattr(
+        collector, "fetch_connection",
+        lambda *_: (_ for _ in ()).throw(RuntimeError("refetch unavailable")),
+    )
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "not achieved"
+    assert final["partial_refetch_errors"] == [
+        {"date_utc": "2026-09-28", "error_type": "RuntimeError"}
+    ]
 
 
 @pytest.mark.parametrize(
@@ -569,6 +616,65 @@ def test_changed_refetch_is_inconclusive(monkeypatch, tmp_path):
     assert len(final["reason"]) <= 500
 
 
+def test_later_verified_day_sets_stability_after_earlier_receipt_mismatch(
+    monkeypatch, tmp_path
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    path = receipts / "2026-09-28.json"
+    receipt = collector.read_json(path)
+    receipt["position_count"] += 1
+    collector.write_json(path, receipt)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00", final
+    assert "mismatch" in final["reason"]
+
+
+def test_late_daily_scan_failure_preserves_earlier_verified_stability(
+    monkeypatch, tmp_path
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    first_path = receipts / "2026-09-28.json"
+    first_receipt = collector.read_json(first_path)
+    first_receipt["position_count"] += 1
+    collector.write_json(first_path, first_receipt)
+    original = audit.fetch_connection
+    end_stamp = collector.utc_midnight(collector.END)
+
+    def fail_end_day(field, where, *args):
+        if field == "positionsConnection" and f"snapshotTimestamp_eq:{end_stamp}" in where:
+            raise RuntimeError("Oct 4 pagination incomplete")
+        return original(field, where, *args)
+
+    monkeypatch.setattr(audit, "fetch_connection", fail_end_day)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00"
+    assert "pagination" in final["reason"]
+    assert "mismatch" in final["reason"]
+
+
+def test_early_daily_scan_failure_can_find_later_verified_day(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    original = audit.fetch_connection
+    first_stamp = collector.utc_midnight(collector.BASELINE + collector.timedelta(days=1))
+
+    def fail_first_day(field, where, *args):
+        if field == "positionsConnection" and f"snapshotTimestamp_eq:{first_stamp}" in where:
+            raise RuntimeError("Sep 28 pagination incomplete")
+        return original(field, where, *args)
+
+    monkeypatch.setattr(audit, "fetch_connection", fail_first_day)
+    monkeypatch.setattr(collector, "fetch_connection", fail_first_day)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00"
+    assert "pagination" in final["reason"]
+
+
 def test_same_totals_with_changed_position_id_is_inconclusive(monkeypatch, tmp_path):
     receipts, results = _window(monkeypatch, tmp_path, mismatch="different_id")
     collector.maybe_finalize(receipts, results)
@@ -611,6 +717,34 @@ def test_wrong_receipt_date_is_inconclusive(monkeypatch, tmp_path):
     collector.write_json(path, receipt)
     collector.maybe_finalize(receipts, results)
     assert collector.read_json(results / "g5_final.json")["primary_status"] == "inconclusive"
+
+
+def test_wrong_first_receipt_date_still_finds_later_stable_day(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    path = receipts / "2026-09-28.json"
+    receipt = collector.read_json(path)
+    receipt["snapshot_utc"] = "2026-09-30T00:00:00+00:00"
+    collector.write_json(path, receipt)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00"
+    assert "fixed date mismatch" in final["reason"]
+
+
+def test_invalid_baseline_provenance_keeps_later_stability_but_not_pass(
+    monkeypatch, tmp_path
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    path = receipts / "2026-09-27.json"
+    receipt = collector.read_json(path)
+    receipt["protocol_sha256"] = "wrong"
+    collector.write_json(path, receipt)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-28T00:00:00+00:00"
+    assert "protocol_sha256" in final["reason"]
 
 
 @pytest.mark.parametrize("field,value", [
@@ -920,6 +1054,23 @@ def test_failed_event_scan_does_not_certify_mismatched_first_day(monkeypatch, tm
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
     assert final["time_to_stable_primary_utc"] == "not achieved"
+    assert "pagination" in final["reason"]
+    assert "mismatch" in final["reason"]
+
+
+def test_failed_event_scan_preserves_later_verified_primary_day(monkeypatch, tmp_path):
+    receipts, results = _window(
+        monkeypatch, tmp_path,
+        event_scans=[[], RuntimeError("TradeAction pagination incomplete")],
+    )
+    path = receipts / "2026-09-28.json"
+    receipt = collector.read_json(path)
+    receipt["position_count"] += 1
+    collector.write_json(path, receipt)
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-29T00:00:00+00:00"
     assert "pagination" in final["reason"]
     assert "mismatch" in final["reason"]
 

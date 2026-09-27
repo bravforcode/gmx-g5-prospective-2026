@@ -354,7 +354,7 @@ def process_day(day: date, output_dir: Path, *, defer_independent: bool = False)
                 "error": str(error)[-500:],
             }
         )
-        receipt = {
+        receipt: dict[str, Any] = {
             "status": "primary_incomplete",
             "snapshot_date_utc": day.isoformat(),
             "protocol_sha256": PROTOCOL_SHA256,
@@ -389,10 +389,21 @@ def process_day(day: date, output_dir: Path, *, defer_independent: bool = False)
     return receipt
 
 
+def verify_receipt_provenance(day: date, receipt: dict[str, Any]) -> None:
+    expected_time = datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+    if receipt.get("snapshot_utc") != expected_time:
+        raise RuntimeError(f"fixed date mismatch in receipt for {day}")
+    if receipt.get("protocol_sha256") != PROTOCOL_SHA256:
+        raise RuntimeError(f"protocol_sha256 mismatch in receipt for {day}")
+    if receipt.get("source") != ENDPOINT:
+        raise RuntimeError(f"source mismatch in receipt for {day}")
+
+
 def verify_refetched_day(
     day: date, observed: dict[str, Any], receipt: dict[str, Any]
 ) -> None:
     """Require the refetched aggregate to reconcile with the saved fixed-time receipt."""
+    verify_receipt_provenance(day, receipt)
     if observed.get("date_utc") != day.isoformat():
         raise RuntimeError(f"refetch fixed date mismatch on {day}")
     for field in (
@@ -423,6 +434,25 @@ def verify_refetched_day(
         raise RuntimeError(f"refetch receipt mismatch on {day}: market_side_sha256")
 
 
+def reconcile_refetched_days(
+    dates: list[date], observed_days: list[dict[str, Any]],
+    receipts: list[dict[str, Any]],
+) -> tuple[str, list[str]]:
+    if len(observed_days) != len(dates) or len(receipts) != len(dates):
+        raise RuntimeError("refetch daily count mismatch")
+    first_verified = "not achieved"
+    errors: list[str] = []
+    for day, observed, receipt in zip(dates, observed_days, receipts, strict=True):
+        try:
+            verify_refetched_day(day, observed, receipt)
+        except Exception as error:
+            errors.append(str(error))
+        else:
+            if first_verified == "not achieved":
+                first_verified = datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+    return first_verified, errors
+
+
 def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
     if datetime.now(UTC) < datetime(2026, 10, 4, tzinfo=UTC):
         return
@@ -449,14 +479,6 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         day for day, receipt in zip(dates, receipts, strict=True)
         if independently_validated(day, receipt)
     ]
-    first_primary = next(
-        (
-            datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
-            for day, receipt in zip(dates[1:], receipts[1:], strict=True)
-            if primary_receipt_matches(day, receipt)
-        ),
-        "not achieved",
-    )
     independent_complete = len(independent_days)
     independent_status = (
         "complete" if independent_complete == 8
@@ -471,6 +493,25 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         "not achieved",
     )
     if any(receipt.get("status") != "primary_complete" for receipt in receipts):
+        first_primary = "not achieved"
+        partial_refetch_errors: list[dict[str, str]] = []
+        for day, receipt in zip(dates[1:], receipts[1:], strict=True):
+            if receipt.get("status") != "primary_complete":
+                continue
+            try:
+                verify_receipt_provenance(day, receipt)
+                observed = {"date_utc": day.isoformat(), **collect_primary(day)}
+                verify_refetched_day(day, observed, receipt)
+            except Exception as error:
+                partial_refetch_errors.append({
+                    "date_utc": day.isoformat(),
+                    "error_type": type(error).__name__,
+                })
+            else:
+                if first_primary == "not achieved":
+                    first_primary = datetime.fromtimestamp(
+                        utc_midnight(day), UTC
+                    ).isoformat()
         write_json(
             final_path,
             {
@@ -482,6 +523,7 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "complete_receipts": sum(r.get("status") == "primary_complete" for r in receipts),
                 "required_receipts": 8,
                 "receipt_load_errors": receipt_load_errors,
+                "partial_refetch_errors": partial_refetch_errors,
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
                 "finalization_attempts": previous_attempts + [{
@@ -495,27 +537,46 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         )
         return
     first_primary_verified = "not achieved"
-    try:
-        for day, receipt in zip(dates, receipts, strict=True):
-            expected_time = datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
-            if receipt.get("snapshot_utc") != expected_time:
-                raise RuntimeError(f"fixed date mismatch in receipt for {day}")
-            if receipt.get("protocol_sha256") != PROTOCOL_SHA256:
-                raise RuntimeError(f"protocol_sha256 mismatch in receipt for {day}")
-            if receipt.get("source") != ENDPOINT:
-                raise RuntimeError(f"source mismatch in receipt for {day}")
-        metrics = analyze(BASELINE, END)
-        metrics.pop("status", None)
-        metrics.pop("analysis_class", None)
-        primary_days = receipts[1:]
-        if len(metrics.get("daily", [])) != len(primary_days):
-            raise RuntimeError("refetch daily count mismatch")
-        for day, observed, receipt in zip(dates[1:], metrics["daily"], primary_days, strict=True):
+    baseline_error: str | None = None
+    callback_errors: list[str] = []
+    scanned_days = 0
+
+    def observe_daily(observed: dict[str, Any]) -> None:
+        nonlocal first_primary_verified, scanned_days
+        if scanned_days >= len(dates) - 1:
+            raise RuntimeError("refetch returned too many daily states")
+        day = dates[scanned_days + 1]
+        receipt = receipts[scanned_days + 1]
+        scanned_days += 1
+        try:
             verify_refetched_day(day, observed, receipt)
+        except Exception as verification_error:
+            callback_errors.append(str(verification_error))
+        else:
             if first_primary_verified == "not achieved":
                 first_primary_verified = datetime.fromtimestamp(
                     utc_midnight(day), UTC
                 ).isoformat()
+
+    try:
+        try:
+            verify_receipt_provenance(dates[0], receipts[0])
+        except RuntimeError as error:
+            baseline_error = str(error)
+        metrics = analyze(BASELINE, END, on_daily=observe_daily)
+        metrics.pop("status", None)
+        metrics.pop("analysis_class", None)
+        primary_days = receipts[1:]
+        first_primary_verified, daily_errors = reconcile_refetched_days(
+            dates[1:], metrics.get("daily", []), primary_days
+        )
+        if daily_errors:
+            raise RuntimeError(
+                f"daily receipt reconciliation failed ({len(daily_errors)} days): "
+                f"{daily_errors[0]}"
+            )
+        if baseline_error is not None:
+            raise RuntimeError(baseline_error)
         with localcontext() as context:
             context.prec = 80
             median = statistics.median(
@@ -543,16 +604,45 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
             },
         )
     except Exception as error:
+        recovery_refetch_errors: list[dict[str, str]] = []
+        for day, receipt in zip(
+            dates[scanned_days + 1:], receipts[scanned_days + 1:], strict=True
+        ):
+            try:
+                verify_receipt_provenance(day, receipt)
+                observed = {"date_utc": day.isoformat(), **collect_primary(day)}
+                verify_refetched_day(day, observed, receipt)
+            except Exception as recovery_error:
+                recovery_refetch_errors.append({
+                    "date_utc": day.isoformat(),
+                    "error_type": type(recovery_error).__name__,
+                })
+            else:
+                if first_primary_verified == "not achieved":
+                    first_primary_verified = datetime.fromtimestamp(
+                        utc_midnight(day), UTC
+                    ).isoformat()
         if isinstance(error, EventIntervalIncomplete):
             try:
-                verify_refetched_day(dates[1], error.first_daily, receipts[1])
-                first_primary_verified = datetime.fromtimestamp(
-                    utc_midnight(dates[1]), UTC
-                ).isoformat()
+                first_primary_verified, daily_errors = reconcile_refetched_days(
+                    dates[1:], error.daily, receipts[1:]
+                )
+                if daily_errors:
+                    error = RuntimeError(
+                        f"{error}; daily receipt reconciliation failed "
+                        f"({len(daily_errors)} days): {daily_errors[0]}"
+                    )
             except Exception as verification_error:
                 error = RuntimeError(
-                    f"{error}; first-day receipt reconciliation failed: {verification_error}"
+                    f"{error}; daily receipt reconciliation failed: {verification_error}"
                 )
+        elif callback_errors:
+            error = RuntimeError(
+                f"{error}; daily receipt reconciliation failed "
+                f"({len(callback_errors)} days): {callback_errors[0]}"
+            )
+        if baseline_error is not None and baseline_error not in str(error):
+            error = RuntimeError(f"{error}; {baseline_error}")
         write_json(
             final_path,
             {
@@ -564,6 +654,7 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
                 "graphql_request_attempts": REQUEST_LOG[request_log_start:],
+                "recovery_refetch_errors": recovery_refetch_errors,
                 "finalization_attempts": previous_attempts + [{
                     "status": "inconclusive",
                     "reason": str(error)[-500:],

@@ -12,6 +12,7 @@ import hashlib
 import json
 import statistics
 import time
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from datetime import time as day_time
 from decimal import Decimal, localcontext
@@ -33,9 +34,9 @@ REQUEST_LOG: list[dict[str, Any]] = []
 class EventIntervalIncomplete(RuntimeError):
     """Event scan failed after the fixed daily position/OI snapshots passed."""
 
-    def __init__(self, first_daily: dict[str, Any], reason: str) -> None:
+    def __init__(self, daily: list[dict[str, Any]], reason: str) -> None:
         super().__init__(reason)
-        self.first_daily = first_daily
+        self.daily = daily
 
 
 def gql(query: str) -> dict[str, Any]:
@@ -69,7 +70,8 @@ def gql(query: str) -> dict[str, Any]:
                     }
                 )
                 raise RuntimeError(json.dumps(payload["errors"]))
-            if "data" not in payload:
+            data = payload.get("data")
+            if not isinstance(data, dict):
                 REQUEST_LOG.append(
                     {
                         "started_at_utc": started_at,
@@ -79,7 +81,7 @@ def gql(query: str) -> dict[str, Any]:
                         "attempt": attempt + 1,
                     }
                 )
-                raise RuntimeError("GraphQL response omitted data")
+                raise RuntimeError("GraphQL response omitted or malformed data")
             REQUEST_LOG.append(
                 {
                     "started_at_utc": started_at,
@@ -90,7 +92,7 @@ def gql(query: str) -> dict[str, Any]:
                 }
             )
             time.sleep(PAGE_DELAY_SECONDS)
-            return payload["data"]
+            return data
         except HTTPError as error:
             REQUEST_LOG.append(
                 {
@@ -260,7 +262,10 @@ def fetch_reconciled_trade_actions(
     }, sum(scan_pages) + len(status_checks)
 
 
-def analyze(start_day: date, end_day: date) -> dict[str, Any]:
+def analyze(
+    start_day: date, end_day: date,
+    on_daily: Callable[[dict[str, Any]], None] | None = None,
+) -> dict[str, Any]:
     start_ts = utc_midnight(start_day)
     end_ts = utc_midnight(end_day)
     if end_ts <= start_ts:
@@ -424,13 +429,15 @@ def analyze(start_day: date, end_day: date) -> dict[str, Any]:
                 ),
             }
         )
+        if on_daily is not None:
+            on_daily(daily[-1])
 
     try:
         discovered_accounts, event_reconciliation, event_requests = (
             fetch_reconciled_trade_actions(start_ts, end_ts, daily[-1]["oi_block"])
         )
     except Exception as error:
-        raise EventIntervalIncomplete(daily[0], str(error)) from error
+        raise EventIntervalIncomplete(daily, str(error)) from error
     total_pages += event_requests
 
     cold_rows = [
