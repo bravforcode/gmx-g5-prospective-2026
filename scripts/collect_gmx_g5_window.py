@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import os
+import statistics
 import subprocess
 import sys
 from datetime import UTC, date, datetime, timedelta
@@ -19,11 +20,13 @@ from pathlib import Path
 from typing import Any
 
 from scripts.audit_gmx_g5_public import (
+    ENDPOINT,
     OI_FIELDS,
     POSITION_FIELDS,
     REQUEST_LOG,
     analyze,
     fetch_connection,
+    market_side_sha256,
     utc_midnight,
 )
 
@@ -90,8 +93,8 @@ def collect_primary(day: date) -> dict[str, Any]:
         OI_FIELDS,
         500,
     )
-    if not positions or not oi_rows:
-        raise RuntimeError("fixed-time position or OI snapshot absent")
+    if not oi_rows:
+        raise RuntimeError("fixed-time OI snapshot absent")
     ids = [str(row["id"]) for row in positions]
     if len(set(ids)) != position_count:
         raise RuntimeError("duplicate or missing position IDs")
@@ -110,9 +113,12 @@ def collect_primary(day: date) -> dict[str, Any]:
 
     sizes: dict[tuple[str, bool], int] = {}
     for row in positions:
+        size = int(row["sizeInUsd"])
+        if size < 0:
+            raise RuntimeError("negative position size")
         market = str(row["market"]).lower()
         key = (market, bool(row["isLong"]))
-        sizes[key] = sizes.get(key, 0) + int(row["sizeInUsd"])
+        sizes[key] = sizes.get(key, 0) + size
     oi_market_set = set(markets)
     unmatched = {market for market, _ in sizes if market not in oi_market_set}
     if unmatched:
@@ -123,6 +129,7 @@ def collect_primary(day: date) -> dict[str, Any]:
     active = 0
     zero_oi = 0
     market_ratios: list[Decimal] = []
+    market_sides: list[tuple[str, int, int, int, int]] = []
     for row in oi_rows:
         market = str(row["marketAddress"]).lower()
         long_oi = int(row["longOpenInterestUsd"])
@@ -131,6 +138,7 @@ def collect_primary(day: date) -> dict[str, Any]:
         short_size = sizes.get((market, False), 0)
         if min(long_oi, short_oi, long_size, short_size) < 0:
             raise RuntimeError("negative OI or position size")
+        market_sides.append((market, long_size, short_size, long_oi, short_oi))
         denominator = long_oi + short_oi
         numerator = long_size + short_size
         if denominator == 0:
@@ -151,7 +159,7 @@ def collect_primary(day: date) -> dict[str, Any]:
         "status": "primary_complete",
         "snapshot_utc": datetime.fromtimestamp(timestamp, UTC).isoformat(),
         "retrieved_at_utc": now_iso(),
-        "source": "https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql",
+        "source": ENDPOINT,
         "collector_code_sha256": code_hash(Path(__file__)),
         "audit_code_sha256": code_hash(Path(__file__).with_name("audit_gmx_g5_public.py")),
         "position_fields": POSITION_FIELDS,
@@ -169,6 +177,7 @@ def collect_primary(day: date) -> dict[str, Any]:
         "venue_coverage": ratio(venue_position, venue_oi),
         "market_ratio_minimum": str(min(market_ratios)),
         "position_ids_sha256": hashlib.sha256("\n".join(sorted(ids)).encode()).hexdigest(),
+        "market_side_sha256": market_side_sha256(market_sides),
     }
 
 
@@ -325,6 +334,10 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
     if datetime.now(UTC) < datetime(2026, 10, 4, tzinfo=UTC):
         return
     final_path = result_dir / "g5_final.json"
+    previous_attempts = read_json(final_path).get("finalization_attempts", [])
+    if not isinstance(previous_attempts, list):
+        raise RuntimeError("invalid prior finalization_attempts history")
+    request_log_start = len(REQUEST_LOG)
     dates = [BASELINE + timedelta(days=offset) for offset in range(8)]
     receipts = [read_json(output_dir / f"{day.isoformat()}.json") for day in dates]
     independent_status = (
@@ -332,7 +345,6 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         if all(r.get("independent", {}).get("status") == "complete" for r in receipts)
         else "partial_or_unavailable"
     )
-    previous_final = read_json(final_path)
     if any(receipt.get("status") != "primary_complete" for receipt in receipts):
         write_json(
             final_path,
@@ -343,30 +355,66 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "required_receipts": 8,
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
+                "finalization_attempts": previous_attempts + [{
+                    "status": "inconclusive",
+                    "reason": "one or more fixed-time receipts incomplete",
+                    "checked_at_utc": now_iso(),
+                    "graphql_request_attempts": REQUEST_LOG[request_log_start:],
+                }],
             },
         )
         return
-    if previous_final.get("primary_status") in {"pass", "not_pass"}:
-        if previous_final.get("independent_chain_validation") != independent_status:
-            previous_final["independent_chain_validation"] = independent_status
-            previous_final["time_to_stable_independent_utc"] = next(
-                (
-                    r["snapshot_utc"]
-                    for r in receipts[1:]
-                    if r.get("independent", {}).get("status") == "complete"
-                ),
-                None,
-            )
-            previous_final["chain_validation_updated_at_utc"] = now_iso()
-            write_json(final_path, previous_final)
-        return
     try:
+        for day, receipt in zip(dates, receipts, strict=True):
+            expected_time = datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+            if receipt.get("snapshot_utc") != expected_time:
+                raise RuntimeError(f"fixed date mismatch in receipt for {day}")
+            if receipt.get("protocol_sha256") != PROTOCOL_SHA256:
+                raise RuntimeError(f"protocol_sha256 mismatch in receipt for {day}")
+            if receipt.get("source") != ENDPOINT:
+                raise RuntimeError(f"source mismatch in receipt for {day}")
         metrics = analyze(BASELINE, END)
         metrics.pop("status", None)
         metrics.pop("analysis_class", None)
-        median = metrics["daily_venue_coverage_median"]
-        primary_status = "pass" if median >= 0.70 else "not_pass"
         primary_days = receipts[1:]
+        if len(metrics.get("daily", [])) != len(primary_days):
+            raise RuntimeError("refetch daily count mismatch")
+        for day, observed, receipt in zip(dates[1:], metrics["daily"], primary_days, strict=True):
+            if observed.get("date_utc") != day.isoformat():
+                raise RuntimeError(f"refetch fixed date mismatch on {day}")
+            for field in (
+                "snapshot_utc", "position_count", "oi_market_count", "oi_block",
+                "positive_oi_markets", "zero_oi_markets", "position_notional_raw",
+                "indexer_oi_raw", "position_ids_sha256",
+            ):
+                if str(observed.get(field)) != str(receipt.get(field)):
+                    raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
+            with localcontext() as context:
+                context.prec = 80
+                expected_coverage = (
+                    Decimal(observed["position_notional_raw"])
+                    / Decimal(observed["indexer_oi_raw"])
+                )
+            for field, expected in (
+                ("venue_coverage", expected_coverage),
+                ("market_ratio_minimum", Decimal(observed["market_ratio_minimum"])),
+            ):
+                if field not in receipt or Decimal(str(receipt[field])) != expected:
+                    raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
+            if "market_side_sha256" not in receipt:
+                raise RuntimeError(
+                    f"primary receipt missing market_side_sha256 on {day}; "
+                    "fixed-time recollection required"
+                )
+            if observed["market_side_sha256"] != receipt["market_side_sha256"]:
+                raise RuntimeError(f"refetch receipt mismatch on {day}: market_side_sha256")
+        with localcontext() as context:
+            context.prec = 80
+            median = statistics.median(
+                Decimal(day["position_notional_raw"]) / Decimal(day["indexer_oi_raw"])
+                for day in metrics["daily"]
+            )
+        primary_status = "pass" if median >= Decimal("0.70") else "not_pass"
         first_primary = next(
             (r["snapshot_utc"] for r in primary_days if r["status"] == "primary_complete"),
             None,
@@ -391,6 +439,11 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "protocol_url": PROTOCOL_URL,
                 "computed_at_utc": now_iso(),
                 "metrics": metrics,
+                "finalization_attempts": previous_attempts + [{
+                    "status": primary_status,
+                    "checked_at_utc": now_iso(),
+                    "graphql_request_attempts": REQUEST_LOG[request_log_start:],
+                }],
             },
         )
     except Exception as error:
@@ -401,6 +454,13 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 "reason": str(error)[-500:],
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
+                "graphql_request_attempts": REQUEST_LOG[request_log_start:],
+                "finalization_attempts": previous_attempts + [{
+                    "status": "inconclusive",
+                    "reason": str(error)[-500:],
+                    "checked_at_utc": now_iso(),
+                    "graphql_request_attempts": REQUEST_LOG[request_log_start:],
+                }],
             },
         )
 
