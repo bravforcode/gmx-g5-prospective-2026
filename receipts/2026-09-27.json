@@ -1,5 +1,11 @@
 {
-  "attempts": [],
+  "attempts": [
+    {
+      "at_utc": "2026-09-27T05:29:39.024193+00:00",
+      "stage": "independent",
+      "status": "unavailable"
+    }
+  ],
   "audit_code_sha256": "4432a43619ee172dcb16d238ee8b879c0665f722455ec393b569c2fa27e63b43",
   "collector_code_sha256": "ca175e9ca2bc1af7918b450776c147c48a6f304e4e4827f6bb87645f6bae7126",
   "first_primary_success_at_utc": "2026-09-27T05:26:43.075277+00:00",
@@ -41,7 +47,18 @@
     }
   ],
   "independent": {
-    "status": "pending"
+    "checked_at_utc": "2026-09-27T05:29:39.024166+00:00",
+    "rpc_failures": [
+      {
+        "error": " [{\"to\": to, \"data\": \"0x\" + data.hex()}, block_tag])\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'historical state 7baa266deb09dc561a0530b471a29eff7578954de2c1521f34af600740297d49 is not available'}",
+        "rpc_url": "https://arb1.arbitrum.io/rpc"
+      },
+      {
+        "error": "n3.12/urllib/request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 429: Too Many Requests",
+        "rpc_url": "https://arbitrum-one.public.blastapi.io"
+      }
+    ],
+    "status": "unavailable"
   },
   "indexer_oi_raw": "49285493903609157799059017812176022739",
   "market_ratio_minimum": "1",
