@@ -76,8 +76,15 @@ def write_json(path: Path, value: dict[str, Any]) -> None:
     os.replace(temporary, path)
 
 
+class InvalidReceiptShape(ValueError):
+    pass
+
+
 def read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    value = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    if not isinstance(value, dict):
+        raise InvalidReceiptShape("JSON receipt is not an object")
+    return value
 
 
 def ratio(numerator: int, denominator: int) -> str:
@@ -707,7 +714,7 @@ def main() -> None:
             for day in due:
                 try:
                     process_day(day, args.output_dir, defer_independent=True)
-                except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                except (json.JSONDecodeError, UnicodeDecodeError, InvalidReceiptShape) as error:
                     corrupt_days.add(day)
                     receipt_load_errors.append(
                         {"date_utc": day.isoformat(), "error_type": type(error).__name__}
@@ -720,7 +727,7 @@ def main() -> None:
                     existing = read_json(args.output_dir / f"{day.isoformat()}.json")
                     if existing.get("status") == "primary_complete":
                         process_day(day, args.output_dir)
-                except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                except (json.JSONDecodeError, UnicodeDecodeError, InvalidReceiptShape) as error:
                     corrupt_days.add(day)
                     receipt_load_errors.append(
                         {"date_utc": day.isoformat(), "error_type": type(error).__name__}
@@ -737,7 +744,7 @@ def main() -> None:
             statuses[day.isoformat()] = read_json(
                 args.output_dir / f"{day.isoformat()}.json"
             ).get("status")
-        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        except (json.JSONDecodeError, UnicodeDecodeError, InvalidReceiptShape) as error:
             statuses[day.isoformat()] = "corrupt_receipt"
             receipt_load_errors.append(
                 {"date_utc": day.isoformat(), "error_type": type(error).__name__}
