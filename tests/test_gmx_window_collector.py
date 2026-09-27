@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import subprocess
 from datetime import UTC, date, datetime
 from decimal import Decimal, localcontext
 
@@ -319,6 +320,39 @@ def _window(monkeypatch, tmp_path, *, position=70, refetch_position=None,
     monkeypatch.setattr(audit, "fetch_connection", connection)
     monkeypatch.setattr(collector, "fetch_connection", connection)
     return receipts, results
+
+
+def test_independent_rpc_timeout_records_failure_and_uses_second_valid_proof(
+    monkeypatch, tmp_path
+):
+    receipts, _ = _window(monkeypatch, tmp_path)
+    day = collector.BASELINE
+    receipt = collector.read_json(receipts / f"{day}.json")
+    proof = receipt["independent"]["proof"]
+    timeouts = []
+
+    def run(command, *, timeout, env, **_kwargs):
+        timeouts.append(timeout)
+        if env["GMX_RPC_URL"] == collector.RPC_URLS[0]:
+            raise subprocess.TimeoutExpired(command, timeout)
+        return subprocess.CompletedProcess(command, 0, json.dumps(proof), "")
+
+    monkeypatch.setattr(collector.subprocess, "run", run)
+    independent = collector.collect_independent(
+        day,
+        receipt["oi_block"],
+        receipt["position_count"],
+        receipt["indexer_oi_raw"],
+        receipt["position_notional_raw"],
+    )
+
+    assert timeouts == [300, 300]
+    assert independent["prior_rpc_failures"][0]["rpc_url"] == collector.RPC_URLS[0]
+    assert "timed out" in independent["prior_rpc_failures"][0]["error"]
+    assert independent["rpc_url"] == collector.RPC_URLS[1]
+    assert independent["status"] == "complete"
+    receipt["independent"] = independent
+    assert collector.independently_validated(day, receipt)
 
 
 @pytest.mark.parametrize(

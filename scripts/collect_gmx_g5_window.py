@@ -45,6 +45,7 @@ RPC_URLS = (
     "https://arb1.arbitrum.io/rpc",
     "https://arbitrum-one.public.blastapi.io",
 )
+INDEPENDENT_RPC_TIMEOUT_SECONDS = 300
 INDEPENDENT_CHECKS = (
     "full_position_key_set",
     "market_universe",
@@ -276,7 +277,7 @@ def collect_independent(
                 command,
                 capture_output=True,
                 text=True,
-                timeout=1800,
+                timeout=INDEPENDENT_RPC_TIMEOUT_SECONDS,
                 check=False,
                 env=environment,
             )
