@@ -736,7 +736,7 @@ def main() -> None:
     finally:
         if args.phase in {"finalize", "all"}:
             maybe_finalize(args.output_dir, args.result_dir)
-    statuses = {}
+    statuses: dict[str, object] = {}
     for day in due:
         if day in corrupt_days:
             statuses[day.isoformat()] = "corrupt_receipt"
@@ -750,7 +750,7 @@ def main() -> None:
             receipt_load_errors.append(
                 {"date_utc": day.isoformat(), "error_type": type(error).__name__}
             )
-    summary = {"at_utc": now_iso(), "daily_statuses": statuses}
+    summary: dict[str, object] = {"at_utc": now_iso(), "daily_statuses": statuses}
     if receipt_load_errors:
         summary["receipt_load_errors"] = receipt_load_errors
     print(json.dumps(summary, sort_keys=True))
