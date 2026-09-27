@@ -346,7 +346,7 @@ def test_independent_rpc_timeout_records_failure_and_uses_second_valid_proof(
         receipt["position_notional_raw"],
     )
 
-    assert timeouts == [300, 300]
+    assert timeouts == [360, 360]
     assert independent["prior_rpc_failures"][0]["rpc_url"] == collector.RPC_URLS[0]
     assert "timed out" in independent["prior_rpc_failures"][0]["error"]
     assert independent["rpc_url"] == collector.RPC_URLS[1]

@@ -45,7 +45,7 @@ RPC_URLS = (
     "https://arb1.arbitrum.io/rpc",
     "https://arbitrum-one.public.blastapi.io",
 )
-INDEPENDENT_RPC_TIMEOUT_SECONDS = 300
+INDEPENDENT_RPC_TIMEOUT_SECONDS = 360
 INDEPENDENT_CHECKS = (
     "full_position_key_set",
     "market_universe",
