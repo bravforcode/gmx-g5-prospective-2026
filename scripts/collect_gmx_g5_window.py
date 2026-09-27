@@ -24,6 +24,7 @@ from scripts.audit_gmx_g5_public import (
     OI_FIELDS,
     POSITION_FIELDS,
     REQUEST_LOG,
+    EventIntervalIncomplete,
     analyze,
     fetch_connection,
     market_side_sha256,
@@ -43,6 +44,14 @@ STOP = datetime(2026, 10, 11, tzinfo=UTC)
 RPC_URLS = (
     "https://arb1.arbitrum.io/rpc",
     "https://arbitrum-one.public.blastapi.io",
+)
+INDEPENDENT_CHECKS = (
+    "full_position_key_set",
+    "market_universe",
+    "oi_raw_unit_tolerance",
+    "sampled_position_sizes",
+    "count_alignment",
+    "primary_amount_alignment",
 )
 
 
@@ -77,6 +86,56 @@ def ratio(numerator: int, denominator: int) -> str:
     with localcontext() as context:
         context.prec = 80
         return str(Decimal(numerator) / Decimal(denominator))
+
+
+def primary_receipt_matches(day: date, receipt: dict[str, Any]) -> bool:
+    return (
+        receipt.get("status") == "primary_complete"
+        and receipt.get("protocol_sha256") == PROTOCOL_SHA256
+        and receipt.get("source") == ENDPOINT
+        and receipt.get("snapshot_utc")
+        == datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+    )
+
+
+def independently_validated(day: date, receipt: dict[str, Any]) -> bool:
+    if not primary_receipt_matches(day, receipt):
+        return False
+    independent = receipt.get("independent")
+    if not isinstance(independent, dict) or independent.get("status") != "complete":
+        return False
+    checks = independent.get("checks")
+    proof = independent.get("proof")
+    if not isinstance(checks, dict) or not isinstance(proof, dict):
+        return False
+    if any(checks.get(name) is not True for name in INDEPENDENT_CHECKS):
+        return False
+    if independent.get("rpc_url") not in RPC_URLS:
+        return False
+    if not isinstance(proof.get("block_hash"), str) or not proof["block_hash"]:
+        return False
+    try:
+        return (
+            proof["block"] == receipt["oi_block"]
+            and proof["block_time_utc"] == receipt["snapshot_utc"]
+            and proof["chain_id"] == 42161
+            and proof["complete_set_read"] is True
+            and proof["onchain_only_keys"] == proof["indexer_only_keys"] == 0
+            and proof["indexer_only_markets"] == 0
+            and proof["chain_only_positive_oi_markets"] == 0
+            and proof["oi_max_abs_difference_raw"] <= 1
+            and proof["oi_exact_sides"] <= 2 * proof["oi_market_rows"]
+            and proof["oi_market_rows"] == proof["indexer_oi_market_count"]
+            == receipt["oi_market_count"]
+            and proof["indexer_position_count"] == receipt["position_count"]
+            and proof["position_values_sampled"] == 7
+            and proof["position_value_mismatches"] == 0
+            and str(proof["oi_total_indexer_raw"]) == str(receipt["indexer_oi_raw"])
+            and str(proof["indexer_position_size_total_raw"])
+            == str(receipt["position_notional_raw"])
+        )
+    except (KeyError, TypeError, ValueError):
+        return False
 
 
 def collect_primary(day: date) -> dict[str, Any]:
@@ -266,7 +325,7 @@ def process_day(day: date, output_dir: Path, *, defer_independent: bool = False)
     previous = read_json(path)
     attempts = list(previous.get("attempts", []))
     if previous.get("status") == "primary_complete":
-        if defer_independent or previous.get("independent", {}).get("status") == "complete":
+        if defer_independent or independently_validated(day, previous):
             return previous
         independent = collect_independent(
             day,
@@ -330,6 +389,40 @@ def process_day(day: date, output_dir: Path, *, defer_independent: bool = False)
     return receipt
 
 
+def verify_refetched_day(
+    day: date, observed: dict[str, Any], receipt: dict[str, Any]
+) -> None:
+    """Require the refetched aggregate to reconcile with the saved fixed-time receipt."""
+    if observed.get("date_utc") != day.isoformat():
+        raise RuntimeError(f"refetch fixed date mismatch on {day}")
+    for field in (
+        "snapshot_utc", "position_count", "oi_market_count", "oi_block",
+        "positive_oi_markets", "zero_oi_markets", "position_notional_raw",
+        "indexer_oi_raw", "position_ids_sha256",
+    ):
+        if str(observed.get(field)) != str(receipt.get(field)):
+            raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
+    with localcontext() as context:
+        context.prec = 80
+        expected_coverage = (
+            Decimal(observed["position_notional_raw"])
+            / Decimal(observed["indexer_oi_raw"])
+        )
+    for field, expected in (
+        ("venue_coverage", expected_coverage),
+        ("market_ratio_minimum", Decimal(observed["market_ratio_minimum"])),
+    ):
+        if field not in receipt or Decimal(str(receipt[field])) != expected:
+            raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
+    if "market_side_sha256" not in receipt:
+        raise RuntimeError(
+            f"primary receipt missing market_side_sha256 on {day}; "
+            "fixed-time recollection required"
+        )
+    if observed["market_side_sha256"] != receipt["market_side_sha256"]:
+        raise RuntimeError(f"refetch receipt mismatch on {day}: market_side_sha256")
+
+
 def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
     if datetime.now(UTC) < datetime(2026, 10, 4, tzinfo=UTC):
         return
@@ -339,31 +432,69 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         raise RuntimeError("invalid prior finalization_attempts history")
     request_log_start = len(REQUEST_LOG)
     dates = [BASELINE + timedelta(days=offset) for offset in range(8)]
-    receipts = [read_json(output_dir / f"{day.isoformat()}.json") for day in dates]
+    receipts: list[dict[str, Any]] = []
+    receipt_load_errors: list[dict[str, str]] = []
+    for day in dates:
+        try:
+            receipt = read_json(output_dir / f"{day.isoformat()}.json")
+            if not isinstance(receipt, dict):
+                raise ValueError("daily receipt is not a JSON object")
+        except (OSError, ValueError, UnicodeError) as error:
+            receipt_load_errors.append(
+                {"date_utc": day.isoformat(), "error_type": type(error).__name__}
+            )
+            receipt = {"status": "primary_incomplete"}
+        receipts.append(receipt)
+    independent_days = [
+        day for day, receipt in zip(dates, receipts, strict=True)
+        if independently_validated(day, receipt)
+    ]
+    first_primary = next(
+        (
+            datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+            for day, receipt in zip(dates[1:], receipts[1:], strict=True)
+            if primary_receipt_matches(day, receipt)
+        ),
+        "not achieved",
+    )
+    independent_complete = len(independent_days)
     independent_status = (
-        "complete"
-        if all(r.get("independent", {}).get("status") == "complete" for r in receipts)
-        else "partial_or_unavailable"
+        "complete" if independent_complete == 8
+        else "partial" if independent_complete else "unavailable"
+    )
+    first_independent = next(
+        (
+            datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
+            for day in independent_days
+            if day > BASELINE
+        ),
+        "not achieved",
     )
     if any(receipt.get("status") != "primary_complete" for receipt in receipts):
         write_json(
             final_path,
             {
                 "primary_status": "inconclusive",
+                "independent_chain_validation": independent_status,
+                "time_to_stable_primary_utc": first_primary,
+                "time_to_stable_independent_utc": first_independent,
                 "reason": "one or more fixed-time receipts incomplete",
                 "complete_receipts": sum(r.get("status") == "primary_complete" for r in receipts),
                 "required_receipts": 8,
+                "receipt_load_errors": receipt_load_errors,
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
                 "finalization_attempts": previous_attempts + [{
                     "status": "inconclusive",
                     "reason": "one or more fixed-time receipts incomplete",
                     "checked_at_utc": now_iso(),
+                    "receipt_load_errors": receipt_load_errors,
                     "graphql_request_attempts": REQUEST_LOG[request_log_start:],
                 }],
             },
         )
         return
+    first_primary_verified = "not achieved"
     try:
         for day, receipt in zip(dates, receipts, strict=True):
             expected_time = datetime.fromtimestamp(utc_midnight(day), UTC).isoformat()
@@ -380,34 +511,11 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
         if len(metrics.get("daily", [])) != len(primary_days):
             raise RuntimeError("refetch daily count mismatch")
         for day, observed, receipt in zip(dates[1:], metrics["daily"], primary_days, strict=True):
-            if observed.get("date_utc") != day.isoformat():
-                raise RuntimeError(f"refetch fixed date mismatch on {day}")
-            for field in (
-                "snapshot_utc", "position_count", "oi_market_count", "oi_block",
-                "positive_oi_markets", "zero_oi_markets", "position_notional_raw",
-                "indexer_oi_raw", "position_ids_sha256",
-            ):
-                if str(observed.get(field)) != str(receipt.get(field)):
-                    raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
-            with localcontext() as context:
-                context.prec = 80
-                expected_coverage = (
-                    Decimal(observed["position_notional_raw"])
-                    / Decimal(observed["indexer_oi_raw"])
-                )
-            for field, expected in (
-                ("venue_coverage", expected_coverage),
-                ("market_ratio_minimum", Decimal(observed["market_ratio_minimum"])),
-            ):
-                if field not in receipt or Decimal(str(receipt[field])) != expected:
-                    raise RuntimeError(f"refetch receipt mismatch on {day}: {field}")
-            if "market_side_sha256" not in receipt:
-                raise RuntimeError(
-                    f"primary receipt missing market_side_sha256 on {day}; "
-                    "fixed-time recollection required"
-                )
-            if observed["market_side_sha256"] != receipt["market_side_sha256"]:
-                raise RuntimeError(f"refetch receipt mismatch on {day}: market_side_sha256")
+            verify_refetched_day(day, observed, receipt)
+            if first_primary_verified == "not achieved":
+                first_primary_verified = datetime.fromtimestamp(
+                    utc_midnight(day), UTC
+                ).isoformat()
         with localcontext() as context:
             context.prec = 80
             median = statistics.median(
@@ -415,25 +523,13 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
                 for day in metrics["daily"]
             )
         primary_status = "pass" if median >= Decimal("0.70") else "not_pass"
-        first_primary = next(
-            (r["snapshot_utc"] for r in primary_days if r["status"] == "primary_complete"),
-            None,
-        )
-        first_independent = next(
-            (
-                r["snapshot_utc"]
-                for r in primary_days
-                if r.get("independent", {}).get("status") == "complete"
-            ),
-            None,
-        )
         write_json(
             final_path,
             {
                 "analysis_class": "prospectively_deposited_GMX_v1_not_Hyperliquid",
                 "primary_status": primary_status,
                 "independent_chain_validation": independent_status,
-                "time_to_stable_primary_utc": first_primary,
+                "time_to_stable_primary_utc": first_primary_verified,
                 "time_to_stable_independent_utc": first_independent,
                 "protocol_sha256": PROTOCOL_SHA256,
                 "protocol_url": PROTOCOL_URL,
@@ -447,10 +543,23 @@ def maybe_finalize(output_dir: Path, result_dir: Path) -> None:
             },
         )
     except Exception as error:
+        if isinstance(error, EventIntervalIncomplete):
+            try:
+                verify_refetched_day(dates[1], error.first_daily, receipts[1])
+                first_primary_verified = datetime.fromtimestamp(
+                    utc_midnight(dates[1]), UTC
+                ).isoformat()
+            except Exception as verification_error:
+                error = RuntimeError(
+                    f"{error}; first-day receipt reconciliation failed: {verification_error}"
+                )
         write_json(
             final_path,
             {
                 "primary_status": "inconclusive",
+                "independent_chain_validation": independent_status,
+                "time_to_stable_primary_utc": first_primary_verified,
+                "time_to_stable_independent_utc": first_independent,
                 "reason": str(error)[-500:],
                 "protocol_sha256": PROTOCOL_SHA256,
                 "checked_at_utc": now_iso(),
@@ -500,16 +609,18 @@ def main() -> None:
         for offset in range(8)
         if utc_midnight(BASELINE + timedelta(days=offset)) <= now.timestamp()
     ]
-    if args.phase in {"primary", "all"}:
-        for day in due:
-            process_day(day, args.output_dir, defer_independent=True)
-    if args.phase in {"independent", "all"}:
-        for day in due:
-            existing = read_json(args.output_dir / f"{day.isoformat()}.json")
-            if existing.get("status") == "primary_complete":
-                process_day(day, args.output_dir)
-    if args.phase in {"finalize", "all"}:
-        maybe_finalize(args.output_dir, args.result_dir)
+    try:
+        if args.phase in {"primary", "all"}:
+            for day in due:
+                process_day(day, args.output_dir, defer_independent=True)
+        if args.phase in {"independent", "all"}:
+            for day in due:
+                existing = read_json(args.output_dir / f"{day.isoformat()}.json")
+                if existing.get("status") == "primary_complete":
+                    process_day(day, args.output_dir)
+    finally:
+        if args.phase in {"finalize", "all"}:
+            maybe_finalize(args.output_dir, args.result_dir)
     statuses = {
         day.isoformat(): read_json(args.output_dir / f"{day.isoformat()}.json").get("status")
         for day in due

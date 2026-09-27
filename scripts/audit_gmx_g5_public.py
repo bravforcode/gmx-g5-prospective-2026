@@ -30,6 +30,14 @@ PAGE_DELAY_SECONDS = 0.25
 REQUEST_LOG: list[dict[str, Any]] = []
 
 
+class EventIntervalIncomplete(RuntimeError):
+    """Event scan failed after the fixed daily position/OI snapshots passed."""
+
+    def __init__(self, first_daily: dict[str, Any], reason: str) -> None:
+        super().__init__(reason)
+        self.first_daily = first_daily
+
+
 def gql(query: str) -> dict[str, Any]:
     body = json.dumps({"query": query}).encode("utf-8")
     last_error: Exception | None = None
@@ -417,9 +425,12 @@ def analyze(start_day: date, end_day: date) -> dict[str, Any]:
             }
         )
 
-    discovered_accounts, event_reconciliation, event_requests = fetch_reconciled_trade_actions(
-        start_ts, end_ts, daily[-1]["oi_block"]
-    )
+    try:
+        discovered_accounts, event_reconciliation, event_requests = (
+            fetch_reconciled_trade_actions(start_ts, end_ts, daily[-1]["oi_block"])
+        )
+    except Exception as error:
+        raise EventIntervalIncomplete(daily[0], str(error)) from error
     total_pages += event_requests
 
     cold_rows = [

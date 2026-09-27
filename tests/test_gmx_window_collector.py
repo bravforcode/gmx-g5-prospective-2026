@@ -69,7 +69,10 @@ def test_collect_primary_uses_fixed_timestamp_and_two_sided_oi(monkeypatch):
     ).hexdigest()
 
 
-def test_independent_failure_does_not_erase_primary_receipt(monkeypatch, tmp_path):
+@pytest.mark.parametrize("prior_independent", [{"status": "unavailable"}, None, "complete"])
+def test_independent_failure_does_not_erase_primary_receipt(
+    monkeypatch, tmp_path, prior_independent
+):
     day = date(2026, 9, 27)
     path = tmp_path / f"{day.isoformat()}.json"
     collector.write_json(
@@ -81,7 +84,7 @@ def test_independent_failure_does_not_erase_primary_receipt(monkeypatch, tmp_pat
             "indexer_oi_raw": "100",
             "position_notional_raw": "100",
             "retrieved_at_utc": datetime(2026, 9, 27, tzinfo=UTC).isoformat(),
-            "independent": {"status": "unavailable"},
+            "independent": prior_independent,
             "attempts": [],
         },
     )
@@ -210,7 +213,39 @@ def _window(monkeypatch, tmp_path, *, position=70, refetch_position=None,
             "venue_coverage": str(Decimal(size) / Decimal(100)),
             "market_ratio_minimum": str(Decimal(size) / Decimal(100)),
             "position_ids_sha256": hashlib.sha256(("p" if size else "").encode()).hexdigest(),
-            "independent": {"status": "complete"},
+            "independent": {
+                "status": "complete",
+                "rpc_url": "https://arb1.arbitrum.io/rpc",
+                "probe_code_sha256": "0" * 64,
+                "checks": {
+                    "full_position_key_set": True,
+                    "market_universe": True,
+                    "oi_raw_unit_tolerance": True,
+                    "sampled_position_sizes": True,
+                    "count_alignment": True,
+                    "primary_amount_alignment": True,
+                },
+                "proof": {
+                    "block": stamp,
+                    "block_hash": "0x" + "1" * 64,
+                    "block_time_utc": datetime.fromtimestamp(stamp, UTC).isoformat(),
+                    "chain_id": 42161,
+                    "complete_set_read": True,
+                    "onchain_only_keys": 0,
+                    "indexer_only_keys": 0,
+                    "indexer_only_markets": 0,
+                    "chain_only_positive_oi_markets": 0,
+                    "oi_max_abs_difference_raw": 0,
+                    "oi_exact_sides": 2,
+                    "oi_market_rows": 1,
+                    "indexer_oi_market_count": 1,
+                    "indexer_position_count": int(size > 0),
+                    "indexer_position_size_total_raw": size,
+                    "oi_total_indexer_raw": 100,
+                    "position_values_sampled": 7,
+                    "position_value_mismatches": 0,
+                },
+            },
         }
         if offset:
             receipt["market_side_sha256"] = hashlib.sha256(
@@ -274,6 +309,245 @@ def _window(monkeypatch, tmp_path, *, position=70, refetch_position=None,
     return receipts, results
 
 
+@pytest.mark.parametrize(
+    "complete_offsets, other_status, expected_axis, expected_time",
+    [
+        (tuple(range(8)), "unavailable", "complete", "2026-09-28T00:00:00+00:00"),
+        ((0, 2, 5), "failed_checks", "partial", "2026-09-29T00:00:00+00:00"),
+        ((0,), "unavailable", "partial", "not achieved"),
+        ((), "unavailable", "unavailable", "not achieved"),
+        (tuple(range(7)), "pending", "partial", "2026-09-28T00:00:00+00:00"),
+    ],
+)
+def test_independent_axis_uses_all_eight_receipts_and_primary_day_time(
+    monkeypatch, tmp_path, complete_offsets, other_status, expected_axis, expected_time
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    for offset in range(8):
+        path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+        receipt = collector.read_json(path)
+        if offset not in complete_offsets:
+            receipt["independent"] = {
+                "status": other_status,
+                "checks": {"full_position_key_set": False},
+                "rpc_failures": [{"error": "historical block unavailable"}],
+            }
+            collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "pass"
+    assert final["independent_chain_validation"] == expected_axis
+    assert final["time_to_stable_independent_utc"] == expected_time
+    for offset in range(8):
+        if offset not in complete_offsets:
+            path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+            assert collector.read_json(path)["independent"]["checks"] == {
+                "full_position_key_set": False
+            }
+
+
+@pytest.mark.parametrize(
+    "complete_offsets, expected_axis, expected_time",
+    [
+        ((0, 2), "partial", "2026-09-29T00:00:00+00:00"),
+        ((0,), "partial", "not achieved"),
+        ((), "unavailable", "not achieved"),
+    ],
+)
+def test_primary_incomplete_still_reports_independent_axis(
+    monkeypatch, tmp_path, complete_offsets, expected_axis, expected_time
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    for offset in range(8):
+        path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+        receipt = collector.read_json(path)
+        if offset not in complete_offsets:
+            receipt["independent"] = {"status": "unavailable"}
+        if offset == 4:
+            receipt["status"] = "primary_incomplete"
+        collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["independent_chain_validation"] == expected_axis
+    assert final["time_to_stable_independent_utc"] == expected_time
+    assert final["time_to_stable_primary_utc"] == "2026-09-28T00:00:00+00:00"
+
+
+def test_no_complete_primary_day_reports_not_achieved(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    for offset in range(1, 8):
+        path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+        receipt = collector.read_json(path)
+        receipt["status"] = "primary_incomplete"
+        collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "not achieved"
+
+
+@pytest.mark.parametrize(
+    "bad_evidence",
+    ["missing_checks", "failed_check", "missing_proof", "wrong_block", "wrong_amount"],
+)
+def test_complete_independent_status_requires_consistent_evidence(
+    monkeypatch, tmp_path, bad_evidence
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    path = receipts / "2026-09-28.json"
+    receipt = collector.read_json(path)
+    independent = receipt["independent"]
+    if bad_evidence == "missing_checks":
+        independent.pop("checks")
+    elif bad_evidence == "failed_check":
+        independent["checks"]["full_position_key_set"] = False
+    elif bad_evidence == "missing_proof":
+        independent.pop("proof")
+    elif bad_evidence == "wrong_block":
+        independent["proof"]["block"] += 1
+    else:
+        independent["proof"]["oi_total_indexer_raw"] += 1
+    collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "pass"
+    assert final["independent_chain_validation"] == "partial"
+    assert final["time_to_stable_independent_utc"] == "2026-09-29T00:00:00+00:00"
+
+
+def test_process_day_retries_inconsistent_complete_independent_receipt(monkeypatch, tmp_path):
+    receipts, _ = _window(monkeypatch, tmp_path)
+    path = receipts / "2026-09-27.json"
+    receipt = collector.read_json(path)
+    receipt["independent"]["checks"]["full_position_key_set"] = False
+    collector.write_json(path, receipt)
+    attempted = []
+
+    def retry(*_args):
+        attempted.append(True)
+        return {"status": "unavailable", "rpc_failures": []}
+
+    monkeypatch.setattr(collector, "collect_independent", retry)
+    result = collector.process_day(collector.BASELINE, receipts)
+    assert attempted == [True]
+    assert result["independent"]["status"] == "unavailable"
+
+
+@pytest.mark.parametrize(
+    "offset, field, value, expected_time",
+    [
+        (1, "protocol_sha256", "wrong protocol", "2026-09-29T00:00:00+00:00"),
+        (1, "source", "https://wrong.example", "2026-09-29T00:00:00+00:00"),
+        (1, "snapshot_utc", "malformed date", "2026-09-29T00:00:00+00:00"),
+        (1, "status", "primary_incomplete", "2026-09-29T00:00:00+00:00"),
+        (0, "source", "https://wrong.example", "2026-09-28T00:00:00+00:00"),
+    ],
+)
+def test_invalid_receipt_cannot_count_as_independently_validated(
+    monkeypatch, tmp_path, offset, field, value, expected_time
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+    receipt = collector.read_json(path)
+    receipt[field] = value
+    collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["independent_chain_validation"] == "partial"
+    assert final["time_to_stable_independent_utc"] == expected_time
+    assert "malformed date" not in final["time_to_stable_independent_utc"]
+
+
+def test_no_valid_provenance_means_independent_unavailable(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    for offset in range(8):
+        path = receipts / f"{collector.BASELINE + collector.timedelta(days=offset)}.json"
+        receipt = collector.read_json(path)
+        receipt["source"] = "https://wrong.example"
+        collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["independent_chain_validation"] == "unavailable"
+    assert final["time_to_stable_independent_utc"] == "not achieved"
+
+
+def test_malformed_daily_json_retracts_prior_pass(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    collector.write_json(
+        results / "g5_final.json",
+        {"primary_status": "pass", "independent_chain_validation": "complete"},
+    )
+    (receipts / "2026-09-29.json").write_text("{broken", encoding="utf-8")
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["independent_chain_validation"] == "partial"
+    assert final["complete_receipts"] == 7
+    assert final["receipt_load_errors"][0]["date_utc"] == "2026-09-29"
+    assert "broken" not in json.dumps(final)
+
+
+def test_default_all_phase_retracts_pass_after_receipt_parse_failure(monkeypatch, tmp_path):
+    receipts, results = _window(monkeypatch, tmp_path)
+    # This test exercises finalization, not the byte-level protocol hash; a
+    # Windows Git checkout may translate the frozen Markdown's line endings.
+    monkeypatch.setattr(collector, "check_protocol", lambda: None)
+    collector.write_json(results / "g5_final.json", {"primary_status": "pass"})
+    broken_path = receipts / "2026-09-29.json"
+    broken_path.write_text("{broken", encoding="utf-8")
+    monkeypatch.setattr(
+        collector.sys, "argv",
+        ["collect_gmx_g5_window", "--output-dir", str(receipts), "--result-dir", str(results)],
+    )
+
+    with pytest.raises(json.JSONDecodeError):
+        collector.main()
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["receipt_load_errors"][0]["date_utc"] == "2026-09-29"
+    assert broken_path.read_text(encoding="utf-8") == "{broken"
+
+
+@pytest.mark.parametrize("bad_independent", [None, "complete"])
+def test_malformed_independent_state_cannot_preserve_prior_complete_axis(
+    monkeypatch, tmp_path, bad_independent
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    collector.write_json(
+        results / "g5_final.json",
+        {"primary_status": "pass", "independent_chain_validation": "complete"},
+    )
+    path = receipts / "2026-09-28.json"
+    receipt = collector.read_json(path)
+    receipt["independent"] = bad_independent
+    collector.write_json(path, receipt)
+
+    collector.maybe_finalize(receipts, results)
+
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "pass"
+    assert final["independent_chain_validation"] == "partial"
+    assert final["time_to_stable_independent_utc"] == "2026-09-29T00:00:00+00:00"
+
+
 def test_complete_window_reconciles_and_passes(monkeypatch, tmp_path):
     receipts, results = _window(monkeypatch, tmp_path)
     collector.maybe_finalize(receipts, results)
@@ -288,6 +562,9 @@ def test_changed_refetch_is_inconclusive(monkeypatch, tmp_path):
     collector.maybe_finalize(receipts, results)
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
+    assert final["independent_chain_validation"] == "complete"
+    assert final["time_to_stable_independent_utc"] == "2026-09-28T00:00:00+00:00"
+    assert final["time_to_stable_primary_utc"] == "not achieved"
     assert "mismatch" in final["reason"].lower()
     assert len(final["reason"]) <= 500
 
@@ -370,6 +647,7 @@ def test_refetch_reconciles_existing_coverage_results(monkeypatch, tmp_path, fie
     collector.maybe_finalize(receipts, results)
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "2026-09-28T00:00:00+00:00"
     assert field in final["reason"]
 
 
@@ -626,9 +904,24 @@ def test_failed_event_scan_retains_current_run_request_metadata(monkeypatch, tmp
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
     assert "pagination" in final["reason"]
+    assert final["time_to_stable_primary_utc"] == "2026-09-28T00:00:00+00:00"
     attempts = final["graphql_request_attempts"]
     assert len(attempts) == 3
     assert all(item["started_at_utc"] == "current run" for item in attempts)
+
+
+def test_failed_event_scan_does_not_certify_mismatched_first_day(monkeypatch, tmp_path):
+    receipts, results = _window(
+        monkeypatch, tmp_path,
+        refetch_position=71,
+        event_scans=[[], RuntimeError("TradeAction pagination incomplete")],
+    )
+    collector.maybe_finalize(receipts, results)
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["time_to_stable_primary_utc"] == "not achieved"
+    assert "pagination" in final["reason"]
+    assert "mismatch" in final["reason"]
 
 
 def test_success_preserves_prior_failed_finalization_request_history(monkeypatch, tmp_path):
