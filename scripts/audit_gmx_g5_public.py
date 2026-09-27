@@ -186,6 +186,15 @@ def dollars(value: Decimal) -> float:
     return float(value / Decimal(10**30))
 
 
+def retrospective_threshold_status(median: Decimal) -> str:
+    """Label a numerical screen without claiming a preregistered G5 result."""
+    return (
+        "RETROSPECTIVE_NUMERICAL_THRESHOLD_MET"
+        if median >= Decimal("0.70")
+        else "RETROSPECTIVE_NUMERICAL_THRESHOLD_NOT_MET"
+    )
+
+
 def market_side_sha256(rows: list[tuple[str, int, int, int, int]]) -> str:
     """Hash sorted market and side aggregates without retaining source rows."""
     canonical = "\n".join("|".join(map(str, row)) for row in sorted(rows))
@@ -461,9 +470,7 @@ def analyze(
     coverage_median = float(exact_median)
     cold_gap = float(cold_notional / end_oi_raw)
     return {
-        "status": "G5_MET_ON_REVISED_GMX_AUDIT"
-        if exact_median >= Decimal("0.70")
-        else "G5_NOT_MET",
+        "status": retrospective_threshold_status(exact_median),
         "analysis_class": "retrospective_exploratory_not_preregistered",
         "venue": "GMX Arbitrum One",
         "endpoint": ENDPOINT,

@@ -10,6 +10,17 @@ from scripts import audit_gmx_g5_public as audit
 from scripts import collect_gmx_g5_window as collector
 
 
+@pytest.mark.parametrize(
+    ("median", "expected"),
+    [
+        (Decimal("0.70"), "RETROSPECTIVE_NUMERICAL_THRESHOLD_MET"),
+        (Decimal("0.699999999999"), "RETROSPECTIVE_NUMERICAL_THRESHOLD_NOT_MET"),
+    ],
+)
+def test_retrospective_threshold_label_is_not_a_g5_claim(median, expected):
+    assert audit.retrospective_threshold_status(median) == expected
+
+
 def test_collect_primary_uses_fixed_timestamp_and_two_sided_oi(monkeypatch):
     day = date(2026, 9, 26)
     stamp = collector.utc_midnight(day)
