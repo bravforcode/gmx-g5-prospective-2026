@@ -700,23 +700,52 @@ def main() -> None:
         for offset in range(8)
         if utc_midnight(BASELINE + timedelta(days=offset)) <= now.timestamp()
     ]
+    receipt_load_errors: list[dict[str, str]] = []
+    corrupt_days: set[date] = set()
     try:
         if args.phase in {"primary", "all"}:
             for day in due:
-                process_day(day, args.output_dir, defer_independent=True)
+                try:
+                    process_day(day, args.output_dir, defer_independent=True)
+                except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                    corrupt_days.add(day)
+                    receipt_load_errors.append(
+                        {"date_utc": day.isoformat(), "error_type": type(error).__name__}
+                    )
         if args.phase in {"independent", "all"}:
             for day in due:
-                existing = read_json(args.output_dir / f"{day.isoformat()}.json")
-                if existing.get("status") == "primary_complete":
-                    process_day(day, args.output_dir)
+                if day in corrupt_days:
+                    continue
+                try:
+                    existing = read_json(args.output_dir / f"{day.isoformat()}.json")
+                    if existing.get("status") == "primary_complete":
+                        process_day(day, args.output_dir)
+                except (json.JSONDecodeError, UnicodeDecodeError) as error:
+                    corrupt_days.add(day)
+                    receipt_load_errors.append(
+                        {"date_utc": day.isoformat(), "error_type": type(error).__name__}
+                    )
     finally:
         if args.phase in {"finalize", "all"}:
             maybe_finalize(args.output_dir, args.result_dir)
-    statuses = {
-        day.isoformat(): read_json(args.output_dir / f"{day.isoformat()}.json").get("status")
-        for day in due
-    }
-    print(json.dumps({"at_utc": now_iso(), "daily_statuses": statuses}, sort_keys=True))
+    statuses = {}
+    for day in due:
+        if day in corrupt_days:
+            statuses[day.isoformat()] = "corrupt_receipt"
+            continue
+        try:
+            statuses[day.isoformat()] = read_json(
+                args.output_dir / f"{day.isoformat()}.json"
+            ).get("status")
+        except (json.JSONDecodeError, UnicodeDecodeError) as error:
+            statuses[day.isoformat()] = "corrupt_receipt"
+            receipt_load_errors.append(
+                {"date_utc": day.isoformat(), "error_type": type(error).__name__}
+            )
+    summary = {"at_utc": now_iso(), "daily_statuses": statuses}
+    if receipt_load_errors:
+        summary["receipt_load_errors"] = receipt_load_errors
+    print(json.dumps(summary, sort_keys=True))
 
 
 if __name__ == "__main__":

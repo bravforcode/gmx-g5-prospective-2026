@@ -562,7 +562,9 @@ def test_malformed_daily_json_retracts_prior_pass(monkeypatch, tmp_path):
     assert "broken" not in json.dumps(final)
 
 
-def test_default_all_phase_retracts_pass_after_receipt_parse_failure(monkeypatch, tmp_path):
+def test_default_all_phase_retracts_pass_after_receipt_parse_failure(
+    monkeypatch, tmp_path, capsys
+):
     receipts, results = _window(monkeypatch, tmp_path)
     # This test exercises finalization, not the byte-level protocol hash; a
     # Windows Git checkout may translate the frozen Markdown's line endings.
@@ -575,13 +577,86 @@ def test_default_all_phase_retracts_pass_after_receipt_parse_failure(monkeypatch
         ["collect_gmx_g5_window", "--output-dir", str(receipts), "--result-dir", str(results)],
     )
 
-    with pytest.raises(json.JSONDecodeError):
-        collector.main()
+    collector.main()
 
     final = collector.read_json(results / "g5_final.json")
     assert final["primary_status"] == "inconclusive"
     assert final["receipt_load_errors"][0]["date_utc"] == "2026-09-29"
     assert broken_path.read_text(encoding="utf-8") == "{broken"
+    assert json.loads(capsys.readouterr().out)["daily_statuses"]["2026-09-29"] == "corrupt_receipt"
+
+
+@pytest.mark.parametrize("broken_bytes", [b"{broken", b"\xff"])
+def test_corrupt_prior_receipt_does_not_starve_later_due_day(
+    monkeypatch, tmp_path, capsys, broken_bytes
+):
+    receipts, results = _window(monkeypatch, tmp_path)
+    monkeypatch.setattr(collector, "check_protocol", lambda: None)
+    broken_path = receipts / "2026-09-29.json"
+    broken_path.write_bytes(broken_bytes)
+    later_path = receipts / "2026-09-30.json"
+    later = collector.read_json(later_path)
+    later["status"] = "primary_incomplete"
+    collector.write_json(later_path, later)
+    monkeypatch.setattr(
+        collector, "collect_independent", lambda *_: {"status": "unavailable"}
+    )
+    monkeypatch.setattr(
+        collector.sys, "argv",
+        ["collect_gmx_g5_window", "--output-dir", str(receipts), "--result-dir", str(results)],
+    )
+
+    collector.main()
+
+    output = capsys.readouterr().out
+    assert "{broken" not in output
+    summary = json.loads(output)
+    statuses = summary["daily_statuses"]
+    assert statuses["2026-09-29"] == "corrupt_receipt"
+    assert statuses["2026-09-30"] == "primary_complete"
+    assert collector.read_json(later_path)["status"] == "primary_complete"
+    assert broken_path.read_bytes() == broken_bytes
+    final = collector.read_json(results / "g5_final.json")
+    assert final["primary_status"] == "inconclusive"
+    assert final["receipt_load_errors"] == [
+        {"date_utc": "2026-09-29", "error_type":
+         "JSONDecodeError" if broken_bytes == b"{broken" else "UnicodeDecodeError"}
+    ]
+    assert summary["receipt_load_errors"] == final["receipt_load_errors"]
+
+
+def test_independent_phase_continues_after_corrupt_receipt(monkeypatch, tmp_path, capsys):
+    receipts, results = _window(monkeypatch, tmp_path)
+    monkeypatch.setattr(collector, "check_protocol", lambda: None)
+    broken_path = receipts / "2026-09-29.json"
+    broken_path.write_bytes(b"{broken")
+    later_path = receipts / "2026-09-30.json"
+    later = collector.read_json(later_path)
+    later["independent"] = {"status": "pending"}
+    collector.write_json(later_path, later)
+    checked = []
+
+    def independent(day, *_args):
+        checked.append(day)
+        return {"status": "unavailable"}
+
+    monkeypatch.setattr(collector, "collect_independent", independent)
+    monkeypatch.setattr(
+        collector.sys, "argv",
+        ["collect_gmx_g5_window", "--output-dir", str(receipts),
+         "--result-dir", str(results), "--phase", "independent"],
+    )
+
+    collector.main()
+
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["daily_statuses"]["2026-09-29"] == "corrupt_receipt"
+    assert date(2026, 9, 30) in checked
+    assert collector.read_json(later_path)["status"] == "primary_complete"
+    assert broken_path.read_bytes() == b"{broken"
+    assert summary["receipt_load_errors"] == [
+        {"date_utc": "2026-09-29", "error_type": "JSONDecodeError"}
+    ]
 
 
 @pytest.mark.parametrize("bad_independent", [None, "complete"])
