@@ -4,6 +4,11 @@
       "at_utc": "2026-09-27T05:29:39.024193+00:00",
       "stage": "independent",
       "status": "unavailable"
+    },
+    {
+      "at_utc": "2026-09-27T12:16:36.282173+00:00",
+      "stage": "independent",
+      "status": "complete"
     }
   ],
   "audit_code_sha256": "4432a43619ee172dcb16d238ee8b879c0665f722455ec393b569c2fa27e63b43",
@@ -47,18 +52,62 @@
     }
   ],
   "independent": {
-    "checked_at_utc": "2026-09-27T05:29:39.024166+00:00",
-    "rpc_failures": [
+    "checked_at_utc": "2026-09-27T12:16:36.282032+00:00",
+    "checks": {
+      "count_alignment": true,
+      "full_position_key_set": true,
+      "market_universe": true,
+      "oi_raw_unit_tolerance": true,
+      "primary_amount_alignment": true,
+      "sampled_position_sizes": true
+    },
+    "prior_rpc_failures": [
       {
-        "error": " [{\"to\": to, \"data\": \"0x\" + data.hex()}, block_tag])\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'historical state 7baa266deb09dc561a0530b471a29eff7578954de2c1521f34af600740297d49 is not available'}",
+        "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'missing trie node 7baa266deb09dc561a0530b471a29eff7578954de2c1521f34af600740297d49 (path ) state 0x7baa266deb09dc561a0530b471a29eff7578954de2c1521f34af600740297d49 is not available, not found'}",
         "rpc_url": "https://arb1.arbitrum.io/rpc"
-      },
-      {
-        "error": "n3.12/urllib/request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 429: Too Many Requests",
-        "rpc_url": "https://arbitrum-one.public.blastapi.io"
       }
     ],
-    "status": "unavailable"
+    "probe_code_sha256": "c7ba85ff6c01411d15287806ff757b09225512993423ad9e8413b342d084f8ea",
+    "proof": {
+      "block": 509232195,
+      "block_hash": "0xafa6f16779d26026eafaeefc4226f337e40341ec3ff764a24544d9b243ad655e",
+      "block_time_utc": "2026-09-27T00:00:00+00:00",
+      "chain_id": 42161,
+      "chain_market_count": 142,
+      "chain_market_set_sha256": "557faabce5c9ca4718e217916fd189c6575c3fb4a4bf9da581c94a761bd423ae",
+      "chain_only_markets": 1,
+      "chain_only_oi_raw": 0,
+      "chain_only_positive_oi_markets": 0,
+      "complete_set_read": true,
+      "indexer_distinct_key_count": 3701,
+      "indexer_key_set_sha256": "24e257f8e727a0927b24055f61839146edd6ec7b3cb37fe1c92649370bd2789d",
+      "indexer_market_set_sha256": "61c6df5c1c8a7fb5c3143332571c5be42a8327a2c707cac76b182bc8163e7787",
+      "indexer_oi_market_count": 141,
+      "indexer_oi_market_pages": 1,
+      "indexer_only_keys": 0,
+      "indexer_only_markets": 0,
+      "indexer_pages": 4,
+      "indexer_position_count": 3701,
+      "indexer_position_size_total_raw": 49285493903609157799059017812176022745,
+      "key_set_sha256": "24e257f8e727a0927b24055f61839146edd6ec7b3cb37fe1c92649370bd2789d",
+      "keys_read": 3701,
+      "oi_exact_markets": 136,
+      "oi_exact_sides": 276,
+      "oi_indexer_pages": 1,
+      "oi_market_rows": 141,
+      "oi_max_abs_difference_raw": 1,
+      "oi_positive_indexer_markets": 119,
+      "oi_sum_abs_difference_raw": 6,
+      "oi_total_indexer_raw": 49285493903609157799059017812176022739,
+      "oi_total_onchain_raw": 49285493903609157799059017812176022745,
+      "onchain_only_keys": 0,
+      "onchain_position_count": 3701,
+      "position_value_mismatches": 0,
+      "position_values_sampled": 7,
+      "rpc_requests": 761
+    },
+    "rpc_url": "https://arbitrum-one.public.blastapi.io",
+    "status": "complete"
   },
   "indexer_oi_raw": "49285493903609157799059017812176022739",
   "market_ratio_minimum": "1",
