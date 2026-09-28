@@ -1,0 +1,67 @@
+{
+  "attempts": [],
+  "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
+  "collector_code_sha256": "9e83f09f2f2d8e230153d5e643bb7cf502040d43c3718ee137bf07772d053fc7",
+  "first_primary_success_at_utc": "2026-09-28T00:05:43.146045+00:00",
+  "graphql_request_attempts": [
+    {
+      "attempt": 1,
+      "elapsed_ms": 776,
+      "http_status": 200,
+      "outcome": "success",
+      "started_at_utc": "2026-09-28T00:05:39.695485+00:00"
+    },
+    {
+      "attempt": 1,
+      "elapsed_ms": 453,
+      "http_status": 200,
+      "outcome": "success",
+      "started_at_utc": "2026-09-28T00:05:40.722095+00:00"
+    },
+    {
+      "attempt": 1,
+      "elapsed_ms": 472,
+      "http_status": 200,
+      "outcome": "success",
+      "started_at_utc": "2026-09-28T00:05:41.425162+00:00"
+    },
+    {
+      "attempt": 1,
+      "elapsed_ms": 353,
+      "http_status": 200,
+      "outcome": "success",
+      "started_at_utc": "2026-09-28T00:05:42.147762+00:00"
+    },
+    {
+      "attempt": 1,
+      "elapsed_ms": 140,
+      "http_status": 200,
+      "outcome": "success",
+      "started_at_utc": "2026-09-28T00:05:42.751312+00:00"
+    }
+  ],
+  "independent": {
+    "status": "pending"
+  },
+  "indexer_oi_raw": "50896049229737773641611243517738901047",
+  "market_ratio_minimum": "1",
+  "market_side_sha256": "84054c6eda2b0b52b320fdec60f48a0940894ac6cd495af74ea76cd6d14af607",
+  "oi_block": 509539969,
+  "oi_fields": "marketAddress snapshotTimestamp blockTimestamp blockNumber longOpenInterestUsd shortOpenInterestUsd",
+  "oi_market_count": 141,
+  "oi_pages": 1,
+  "position_count": 3701,
+  "position_fields": "id account market isLong sizeInUsd openedAt snapshotTimestamp",
+  "position_ids_sha256": "6508404005836b1956c7388b3fec91a0fd2c84e1300046e4389914f805b6d90a",
+  "position_notional_raw": "50896049229737773641611243517738901053",
+  "position_pages": 4,
+  "positive_oi_markets": 119,
+  "protocol_sha256": "efa241ab8bb57be1ae582c15a0bdef4932e14005613e3dd5375c96892e95fee0",
+  "protocol_url": "https://gist.github.com/bravforcode/d139701fb92b4dad22e89756e9e14fa8",
+  "retrieved_at_utc": "2026-09-28T00:05:43.146045+00:00",
+  "snapshot_utc": "2026-09-28T00:00:00+00:00",
+  "source": "https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql",
+  "status": "primary_complete",
+  "venue_coverage": "1.0000000000000000000000000000000000001178873427467193835977944217553205489624095",
+  "zero_oi_markets": 22
+}
