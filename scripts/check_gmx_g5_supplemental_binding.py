@@ -6,6 +6,7 @@ import json
 import re
 import sys
 from datetime import UTC, date, datetime
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import Any
 
@@ -43,7 +44,10 @@ def check_binding(day: date, receipt: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("on-chain key digest mismatch")
     if any(
         proof.get(field) != receipt["position_count"]
-        for field in ("keys_read", "onchain_position_count", "indexer_position_count")
+        for field in (
+            "keys_read", "onchain_position_count", "indexer_position_count",
+            "indexer_distinct_key_count",
+        )
     ):
         raise ValueError("proof position count mismatch")
 
@@ -102,7 +106,10 @@ def main(argv: list[str] | None = None) -> int:
         result = check_binding(args.day, receipt)
         result["receipt_sha256"] = hashlib.sha256(receipt_bytes).hexdigest()
         result["checked_at_utc"] = datetime.now(UTC).isoformat()
-    except (OSError, UnicodeError, ValueError, TypeError, KeyError, RuntimeError) as error:
+    except (
+        OSError, UnicodeError, ValueError, TypeError, KeyError, RuntimeError,
+        InvalidOperation,
+    ) as error:
         print(f"binding check failed: {type(error).__name__}", file=sys.stderr)
         return 1
     print(json.dumps(result, sort_keys=True))
