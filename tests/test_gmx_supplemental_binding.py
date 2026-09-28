@@ -37,8 +37,57 @@ def fixture():
         "source": collector.ENDPOINT,
         "status": "primary_complete",
         "independent": {
+            "checked_at_utc": "2026-09-28T00:09:00+00:00",
+            "checks": {
+                "full_position_key_set": True,
+                "market_universe": True,
+                "oi_raw_unit_tolerance": True,
+                "sampled_position_sizes": True,
+                "count_alignment": True,
+                "primary_amount_alignment": True,
+            },
+            "prior_rpc_failures": [],
+            "probe_code_sha256": "c" * 64,
+            "rpc_url": "https://arb1.arbitrum.io/rpc",
             "status": "complete",
-            "proof": {"indexer_key_set_sha256": KEY_DIGEST},
+            "proof": {
+                "block": 42,
+                "block_hash": "0x" + "aa" * 32,
+                "block_time_utc": snapshot,
+                "chain_id": 42161,
+                "chain_market_count": 1,
+                "chain_market_set_sha256": "d" * 64,
+                "chain_only_markets": 0,
+                "chain_only_oi_raw": 0,
+                "chain_only_positive_oi_markets": 0,
+                "complete_set_read": True,
+                "indexer_distinct_key_count": 2,
+                "indexer_key_set_sha256": KEY_DIGEST,
+                "indexer_market_set_sha256": "d" * 64,
+                "indexer_oi_market_count": 1,
+                "indexer_oi_market_pages": 1,
+                "indexer_only_keys": 0,
+                "indexer_only_markets": 0,
+                "indexer_pages": 1,
+                "indexer_position_count": 2,
+                "indexer_position_size_total_raw": 100,
+                "key_set_sha256": KEY_DIGEST,
+                "keys_read": 2,
+                "oi_exact_markets": 1,
+                "oi_exact_sides": 2,
+                "oi_indexer_pages": 1,
+                "oi_market_rows": 1,
+                "oi_max_abs_difference_raw": 0,
+                "oi_positive_indexer_markets": 1,
+                "oi_sum_abs_difference_raw": 0,
+                "oi_total_indexer_raw": 100,
+                "oi_total_onchain_raw": 100,
+                "onchain_only_keys": 0,
+                "onchain_position_count": 2,
+                "position_value_mismatches": 0,
+                "position_values_sampled": 7,
+                "rpc_requests": 1,
+            },
         },
     }
     rows = [{"id": value, "sizeInUsd": "50"} for value in IDS]
@@ -64,6 +113,19 @@ def test_matching_primary_and_key_bytes_pass(monkeypatch):
     assert result["position_ids_sha256"] == ID_DIGEST
     assert result["indexer_key_set_sha256"] == KEY_DIGEST
     assert repr(receipt) == before
+
+
+def test_abbreviated_independent_proof_is_rejected(monkeypatch):
+    observed, receipt, rows = fixture()
+    receipt["independent"] = {
+        "status": "complete",
+        "proof": {"indexer_key_set_sha256": KEY_DIGEST},
+    }
+    monkeypatch.setattr(binding, "collect_primary", lambda day: observed)
+    monkeypatch.setattr(binding, "fetch_connection", lambda *_: (rows, 2, 1))
+
+    with pytest.raises(ValueError, match="independent proof"):
+        binding.check_binding(DAY, receipt)
 
 
 @pytest.mark.parametrize(

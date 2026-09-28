@@ -10,7 +10,11 @@ from pathlib import Path
 from typing import Any
 
 from scripts.audit_gmx_g5_public import fetch_connection, utc_midnight
-from scripts.collect_gmx_g5_window import collect_primary, verify_refetched_day
+from scripts.collect_gmx_g5_window import (
+    collect_primary,
+    independently_validated,
+    verify_refetched_day,
+)
 
 _HEX_DIGEST = re.compile(r"[0-9a-f]{64}\Z")
 _POSITION_ID = re.compile(r"0x([0-9a-fA-F]{64}):([0-9]+)\Z")
@@ -26,6 +30,8 @@ def check_binding(day: date, receipt: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("missing or malformed independent key digest")
     if not isinstance(independent, dict) or independent.get("status") != "complete":
         raise ValueError("independent proof is not complete")
+    if not independently_validated(day, receipt):
+        raise ValueError("independent proof does not satisfy frozen criteria")
 
     observed = collect_primary(day)
     observed["date_utc"] = day.isoformat()
