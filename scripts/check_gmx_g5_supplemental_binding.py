@@ -26,12 +26,26 @@ def check_binding(day: date, receipt: dict[str, Any]) -> dict[str, Any]:
     independent = receipt.get("independent")
     proof = independent.get("proof") if isinstance(independent, dict) else None
     saved_key_digest = proof.get("indexer_key_set_sha256") if isinstance(proof, dict) else None
-    if not isinstance(saved_key_digest, str) or not _HEX_DIGEST.fullmatch(saved_key_digest):
+    if (
+        not isinstance(proof, dict)
+        or not isinstance(saved_key_digest, str)
+        or not _HEX_DIGEST.fullmatch(saved_key_digest)
+    ):
         raise ValueError("missing or malformed independent key digest")
     if not isinstance(independent, dict) or independent.get("status") != "complete":
         raise ValueError("independent proof is not complete")
     if not independently_validated(day, receipt):
         raise ValueError("independent proof does not satisfy frozen criteria")
+    chain_key_digest = proof.get("key_set_sha256")
+    if not isinstance(chain_key_digest, str) or not _HEX_DIGEST.fullmatch(chain_key_digest):
+        raise ValueError("missing or malformed on-chain key digest")
+    if chain_key_digest != saved_key_digest:
+        raise ValueError("on-chain key digest mismatch")
+    if any(
+        proof.get(field) != receipt["position_count"]
+        for field in ("keys_read", "onchain_position_count", "indexer_position_count")
+    ):
+        raise ValueError("proof position count mismatch")
 
     observed = collect_primary(day)
     observed["date_utc"] = day.isoformat()

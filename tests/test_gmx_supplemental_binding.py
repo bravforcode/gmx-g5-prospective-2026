@@ -131,6 +131,41 @@ def test_abbreviated_independent_proof_is_rejected(monkeypatch):
 @pytest.mark.parametrize(
     ("change", "expected"),
     [
+        ("missing_chain_digest", "on-chain key digest"),
+        ("different_chain_digest", "on-chain key digest"),
+        ("short_chain_digest", "on-chain key digest"),
+        ("wrong_keys_read", "proof position count"),
+        ("wrong_onchain_count", "proof position count"),
+        ("wrong_indexer_count", "frozen criteria"),
+    ],
+)
+def test_independent_key_proof_must_match_digest_and_counts(
+    monkeypatch, change, expected
+):
+    observed, receipt, rows = fixture()
+    proof = receipt["independent"]["proof"]
+    if change == "missing_chain_digest":
+        proof.pop("key_set_sha256")
+    elif change == "different_chain_digest":
+        proof["key_set_sha256"] = "0" * 64
+    elif change == "short_chain_digest":
+        proof["key_set_sha256"] = KEY_DIGEST[:-1]
+    elif change == "wrong_keys_read":
+        proof["keys_read"] = 1
+    elif change == "wrong_onchain_count":
+        proof["onchain_position_count"] = 1
+    else:
+        proof["indexer_position_count"] = 1
+    monkeypatch.setattr(binding, "collect_primary", lambda day: observed)
+    monkeypatch.setattr(binding, "fetch_connection", lambda *_: (rows, 2, 1))
+
+    with pytest.raises(ValueError, match=expected):
+        binding.check_binding(DAY, receipt)
+
+
+@pytest.mark.parametrize(
+    ("change", "expected"),
+    [
         ("key_set", "independent key digest mismatch"),
         ("market_side", "market_side_sha256"),
         ("timestamp", "wrong-time position ID"),
