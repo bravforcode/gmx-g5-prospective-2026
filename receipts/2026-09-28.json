@@ -1,5 +1,11 @@
 {
-  "attempts": [],
+  "attempts": [
+    {
+      "at_utc": "2026-09-28T00:09:12.259627+00:00",
+      "stage": "independent",
+      "status": "complete"
+    }
+  ],
   "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
   "collector_code_sha256": "9e83f09f2f2d8e230153d5e643bb7cf502040d43c3718ee137bf07772d053fc7",
   "first_primary_success_at_utc": "2026-09-28T00:05:43.146045+00:00",
@@ -41,7 +47,57 @@
     }
   ],
   "independent": {
-    "status": "pending"
+    "checked_at_utc": "2026-09-28T00:09:12.259456+00:00",
+    "checks": {
+      "count_alignment": true,
+      "full_position_key_set": true,
+      "market_universe": true,
+      "oi_raw_unit_tolerance": true,
+      "primary_amount_alignment": true,
+      "sampled_position_sizes": true
+    },
+    "prior_rpc_failures": [],
+    "probe_code_sha256": "c7ba85ff6c01411d15287806ff757b09225512993423ad9e8413b342d084f8ea",
+    "proof": {
+      "block": 509539969,
+      "block_hash": "0x1e2c07523e16fb6547b0c3b42ec966c537ee6d57ae6e930774b7bc1abab328d6",
+      "block_time_utc": "2026-09-28T00:00:00+00:00",
+      "chain_id": 42161,
+      "chain_market_count": 142,
+      "chain_market_set_sha256": "557faabce5c9ca4718e217916fd189c6575c3fb4a4bf9da581c94a761bd423ae",
+      "chain_only_markets": 1,
+      "chain_only_oi_raw": 0,
+      "chain_only_positive_oi_markets": 0,
+      "complete_set_read": true,
+      "indexer_distinct_key_count": 3701,
+      "indexer_key_set_sha256": "58b12ea5f8d352bc9d0ef179a7abfe998182dd6497b780927ee1bdb53f6b4540",
+      "indexer_market_set_sha256": "61c6df5c1c8a7fb5c3143332571c5be42a8327a2c707cac76b182bc8163e7787",
+      "indexer_oi_market_count": 141,
+      "indexer_oi_market_pages": 1,
+      "indexer_only_keys": 0,
+      "indexer_only_markets": 0,
+      "indexer_pages": 4,
+      "indexer_position_count": 3701,
+      "indexer_position_size_total_raw": 50896049229737773641611243517738901053,
+      "key_set_sha256": "58b12ea5f8d352bc9d0ef179a7abfe998182dd6497b780927ee1bdb53f6b4540",
+      "keys_read": 3701,
+      "oi_exact_markets": 136,
+      "oi_exact_sides": 276,
+      "oi_indexer_pages": 1,
+      "oi_market_rows": 141,
+      "oi_max_abs_difference_raw": 1,
+      "oi_positive_indexer_markets": 119,
+      "oi_sum_abs_difference_raw": 6,
+      "oi_total_indexer_raw": 50896049229737773641611243517738901047,
+      "oi_total_onchain_raw": 50896049229737773641611243517738901053,
+      "onchain_only_keys": 0,
+      "onchain_position_count": 3701,
+      "position_value_mismatches": 0,
+      "position_values_sampled": 7,
+      "rpc_requests": 761
+    },
+    "rpc_url": "https://arb1.arbitrum.io/rpc",
+    "status": "complete"
   },
   "indexer_oi_raw": "50896049229737773641611243517738901047",
   "market_ratio_minimum": "1",
