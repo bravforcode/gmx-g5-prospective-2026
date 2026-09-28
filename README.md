@@ -25,6 +25,15 @@ event join; its two status axes separate the numerical gate from independent
 chain validation. A failed or unavailable chain check remains visible and
 cannot be promoted into a successful one by the source-internal OI ratio.
 
+For an optional read-only same-indexer reproducibility check of a saved day,
+run `python -m scripts.check_gmx_g5_supplemental_binding --day 2026-09-28 --receipt receipts/2026-09-28.json`. It refetches the
+fixed-time primary aggregate, reconciles it with the receipt, and compares
+the refetched position ID and normalized key digests with the saved primary
+and independent-probe digests. It prints only aggregate status, digests,
+receipt SHA-256, date, and UTC check time; it does not write files. A pass
+shows same-indexer reproducibility against that receipt. It is supplemental,
+not a G5 criterion or a new on-chain proof.
+
 This public record is not a guarantee of uptime, free-RPC continuity,
 complete data, or provider publication rights. Do not represent a scheduled
 job as a completed holdout before checking the actual committed receipts and
