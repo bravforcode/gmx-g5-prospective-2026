@@ -30,9 +30,9 @@ run `python -m scripts.check_gmx_g5_supplemental_binding --day 2026-09-28 --rece
 fixed-time primary aggregate, reconciles it with the receipt, and compares
 the refetched position ID and normalized key digests with the saved primary
 and independent-probe digests. It prints only aggregate status, digests,
-receipt SHA-256, date, and UTC check time; it does not write files. A pass
-shows same-indexer reproducibility against that receipt. It is supplemental,
-not a G5 criterion or a new on-chain proof.
+receipt SHA-256, date, and UTC check time; it does not write receipts or
+result files. A pass shows same-indexer reproducibility against that receipt.
+It is supplemental, not a G5 criterion or a new on-chain proof.
 
 This public record is not a guarantee of uptime, free-RPC continuity,
 complete data, or provider publication rights. Do not represent a scheduled
