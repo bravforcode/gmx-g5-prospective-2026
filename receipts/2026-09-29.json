@@ -4,6 +4,11 @@
       "at_utc": "2026-09-29T00:08:54.284309+00:00",
       "stage": "independent",
       "status": "failed_checks"
+    },
+    {
+      "at_utc": "2026-09-29T05:56:13.195207+00:00",
+      "stage": "independent",
+      "status": "failed_checks"
     }
   ],
   "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
@@ -47,7 +52,7 @@
     }
   ],
   "independent": {
-    "checked_at_utc": "2026-09-29T00:08:54.284168+00:00",
+    "checked_at_utc": "2026-09-29T05:56:13.195065+00:00",
     "checks": {
       "count_alignment": true,
       "full_position_key_set": true,
@@ -56,7 +61,12 @@
       "primary_amount_alignment": true,
       "sampled_position_sizes": true
     },
-    "prior_rpc_failures": [],
+    "prior_rpc_failures": [
+      {
+        "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'missing trie node 95fffc18ea0b7ce5e8688c36052239555c870030dbfe5a49956d41339900e7b4 (path ) state 0x95fffc18ea0b7ce5e8688c36052239555c870030dbfe5a49956d41339900e7b4 is not available, not found'}",
+        "rpc_url": "https://arb1.arbitrum.io/rpc"
+      }
+    ],
     "probe_code_sha256": "c7ba85ff6c01411d15287806ff757b09225512993423ad9e8413b342d084f8ea",
     "proof": {
       "block": 509864040,
@@ -96,7 +106,7 @@
       "position_values_sampled": 7,
       "rpc_requests": 761
     },
-    "rpc_url": "https://arb1.arbitrum.io/rpc",
+    "rpc_url": "https://arbitrum-one.public.blastapi.io",
     "status": "failed_checks"
   },
   "indexer_oi_raw": "48086036402489199606444256421351711949",
