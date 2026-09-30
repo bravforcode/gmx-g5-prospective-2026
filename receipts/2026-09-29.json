@@ -19,6 +19,11 @@
       "at_utc": "2026-09-29T22:27:31.672592+00:00",
       "stage": "independent",
       "status": "failed_checks"
+    },
+    {
+      "at_utc": "2026-09-30T05:47:23.693347+00:00",
+      "stage": "independent",
+      "status": "failed_checks"
     }
   ],
   "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
@@ -62,7 +67,7 @@
     }
   ],
   "independent": {
-    "checked_at_utc": "2026-09-29T22:27:31.672398+00:00",
+    "checked_at_utc": "2026-09-30T05:47:23.693208+00:00",
     "checks": {
       "count_alignment": true,
       "full_position_key_set": true,
