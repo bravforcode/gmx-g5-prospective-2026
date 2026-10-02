@@ -1,5 +1,11 @@
 {
-  "attempts": [],
+  "attempts": [
+    {
+      "at_utc": "2026-10-02T05:59:12.606584+00:00",
+      "stage": "independent",
+      "status": "complete"
+    }
+  ],
   "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
   "collector_code_sha256": "9e83f09f2f2d8e230153d5e643bb7cf502040d43c3718ee137bf07772d053fc7",
   "first_primary_success_at_utc": "2026-10-02T05:52:20.836266+00:00",
@@ -41,7 +47,62 @@
     }
   ],
   "independent": {
-    "status": "pending"
+    "checked_at_utc": "2026-10-02T05:59:12.606453+00:00",
+    "checks": {
+      "count_alignment": true,
+      "full_position_key_set": true,
+      "market_universe": true,
+      "oi_raw_unit_tolerance": true,
+      "primary_amount_alignment": true,
+      "sampled_position_sizes": true
+    },
+    "prior_rpc_failures": [
+      {
+        "error": " [{\"to\": to, \"data\": \"0x\" + data.hex()}, block_tag])\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'historical state cd88eebef2784f837167362affa5e797d0c74020924990099b7247717db5b792 is not available'}",
+        "rpc_url": "https://arb1.arbitrum.io/rpc"
+      }
+    ],
+    "probe_code_sha256": "c7ba85ff6c01411d15287806ff757b09225512993423ad9e8413b342d084f8ea",
+    "proof": {
+      "block": 510818490,
+      "block_hash": "0xf2786e28758ff41a9c0c4ddeee353d980dfd98647b442502f48925f02f63e736",
+      "block_time_utc": "2026-10-02T00:00:00+00:00",
+      "chain_id": 42161,
+      "chain_market_count": 142,
+      "chain_market_set_sha256": "557faabce5c9ca4718e217916fd189c6575c3fb4a4bf9da581c94a761bd423ae",
+      "chain_only_markets": 1,
+      "chain_only_oi_raw": 0,
+      "chain_only_positive_oi_markets": 0,
+      "complete_set_read": true,
+      "indexer_distinct_key_count": 3802,
+      "indexer_key_set_sha256": "216bee915cbfd66134b1023695f74ca61bf7b036c32a468a607b6308570b00f2",
+      "indexer_market_set_sha256": "61c6df5c1c8a7fb5c3143332571c5be42a8327a2c707cac76b182bc8163e7787",
+      "indexer_oi_market_count": 141,
+      "indexer_oi_market_pages": 1,
+      "indexer_only_keys": 0,
+      "indexer_only_markets": 0,
+      "indexer_pages": 4,
+      "indexer_position_count": 3802,
+      "indexer_position_size_total_raw": 49496201680249501880457445143315383402,
+      "key_set_sha256": "216bee915cbfd66134b1023695f74ca61bf7b036c32a468a607b6308570b00f2",
+      "keys_read": 3802,
+      "oi_exact_markets": 136,
+      "oi_exact_sides": 274,
+      "oi_indexer_pages": 1,
+      "oi_market_rows": 141,
+      "oi_max_abs_difference_raw": 1,
+      "oi_positive_indexer_markets": 120,
+      "oi_sum_abs_difference_raw": 8,
+      "oi_total_indexer_raw": 49496201680249501880457445143315383394,
+      "oi_total_onchain_raw": 49496201680249501880457445143315383402,
+      "onchain_only_keys": 0,
+      "onchain_position_count": 3802,
+      "position_value_mismatches": 0,
+      "position_values_sampled": 7,
+      "rpc_requests": 762
+    },
+    "rpc_url": "https://arbitrum-one.public.blastapi.io",
+    "status": "complete"
   },
   "indexer_oi_raw": "49496201680249501880457445143315383394",
   "market_ratio_minimum": "1",
