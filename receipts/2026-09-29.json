@@ -129,6 +129,11 @@
       "at_utc": "2026-10-07T06:13:13.362362+00:00",
       "stage": "independent",
       "status": "unavailable"
+    },
+    {
+      "at_utc": "2026-10-07T13:38:59.692885+00:00",
+      "stage": "independent",
+      "status": "unavailable"
     }
   ],
   "audit_code_sha256": "7046ddef4a213ca2cd048527eddf373f9e6fa0cf2408a4897049f4d91edc3c78",
@@ -172,14 +177,14 @@
     }
   ],
   "independent": {
-    "checked_at_utc": "2026-10-07T06:13:13.362336+00:00",
+    "checked_at_utc": "2026-10-07T13:38:59.692857+00:00",
     "rpc_failures": [
       {
         "error": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/gmx-g5-prospective-2026/gmx-g5-prospective-2026/scripts/probe_gmx_onchain_position_set.py\", line 52, in rpc_call\n    raise RuntimeError(f\"{method} failed: {result['error']}\")\nRuntimeError: eth_call failed: {'code': -32000, 'message': 'missing trie node 95fffc18ea0b7ce5e8688c36052239555c870030dbfe5a49956d41339900e7b4 (path ) state 0x95fffc18ea0b7ce5e8688c36052239555c870030dbfe5a49956d41339900e7b4 is not available, not found'}",
         "rpc_url": "https://arb1.arbitrum.io/rpc"
       },
       {
-        "error": "n3.12/urllib/request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/urllib/request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 429: Too Many Requests",
+        "error": "n3.12/urllib/request.py\", line 559, in error\n    return self._call_chain(*args)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/urllib/request.py\", line 492, in _call_chain\n    result = func(*args)\n             ^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/urllib/request.py\", line 639, in http_error_default\n    raise HTTPError(req.full_url, code, msg, hdrs, fp)\nurllib.error.HTTPError: HTTP Error 429: Too Many Requests",
         "rpc_url": "https://arbitrum-one.public.blastapi.io"
       }
     ],
