@@ -1,6 +1,6 @@
 {
   "analysis_class": "prospectively_deposited_GMX_v1_not_Hyperliquid",
-  "computed_at_utc": "2026-10-09T13:28:56.644353+00:00",
+  "computed_at_utc": "2026-10-09T13:34:31.648923+00:00",
   "finalization_attempts": [
     {
       "checked_at_utc": "2026-10-04T06:03:52.359580+00:00",
@@ -14216,6 +14216,481 @@
         }
       ],
       "status": "pass"
+    },
+    {
+      "checked_at_utc": "2026-10-09T13:34:31.648926+00:00",
+      "graphql_request_attempts": [
+        {
+          "attempt": 1,
+          "elapsed_ms": 848,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:30.855843+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 696,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:31.953838+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 657,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:32.899897+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 522,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:33.807132+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 329,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:34.580245+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 637,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:35.162972+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 736,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:36.050644+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 651,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:37.036795+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 436,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:37.938164+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 324,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:38.626455+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 690,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:39.204374+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 662,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:40.144481+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 539,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:41.056688+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 534,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:41.846309+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 323,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:42.632492+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 640,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:43.209945+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 619,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:44.100037+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 667,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:44.969791+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 902,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:45.887384+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 302,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:47.041812+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 420,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:47.598185+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 450,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:48.269023+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 634,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:48.969629+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 863,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:49.854555+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 316,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:50.970315+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 631,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:51.540962+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 559,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:52.422535+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 730,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:53.232310+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 545,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:54.213332+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 310,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:55.011585+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 479,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:55.576516+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 424,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:56.306320+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 410,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:56.981371+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 544,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:57.642266+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 307,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:58.439743+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 206,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:59.001649+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 945,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:33:59.457881+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 963,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:00.653844+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 899,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:01.868143+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 918,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:03.017654+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 879,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:04.187127+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 984,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:05.317373+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 998,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:06.552827+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 643,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:07.801244+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 902,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:08.695493+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 915,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:09.848465+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 932,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:11.013977+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 692,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:12.196680+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 1091,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:13.139291+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 1306,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:14.481024+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 209,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:16.236220+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 199,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:16.695945+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 685,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:17.144895+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 919,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:18.080918+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 751,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:19.250604+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 430,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:20.251987+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 756,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:20.932640+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 360,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:21.939715+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 1002,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:22.550686+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 691,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:23.803572+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 763,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:24.745290+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 953,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:25.759010+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 918,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:26.963336+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 712,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:28.131818+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 739,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:29.094432+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 663,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:30.083972+00:00"
+        },
+        {
+          "attempt": 1,
+          "elapsed_ms": 198,
+          "http_status": 200,
+          "outcome": "success",
+          "started_at_utc": "2026-10-09T13:34:31.183079+00:00"
+        }
+      ],
+      "status": "pass"
     }
   ],
   "independent_chain_validation": "partial",
@@ -14430,20 +14905,20 @@
       "status": "source_internal_two_scan_consistent",
       "status_checks": [
         {
-          "finalizedHeight": 513210046,
-          "height": 513210066
+          "finalizedHeight": 513211350,
+          "height": 513211370
         },
         {
-          "finalizedHeight": 513210109,
-          "height": 513210129
+          "finalizedHeight": 513211350,
+          "height": 513211370
         },
         {
-          "finalizedHeight": 513210109,
-          "height": 513210129
+          "finalizedHeight": 513211350,
+          "height": 513211370
         },
         {
-          "finalizedHeight": 513210109,
-          "height": 513210129
+          "finalizedHeight": 513211350,
+          "height": 513211370
         }
       ],
       "trade_action_count": 69075,
@@ -14452,472 +14927,472 @@
     "graphql_request_attempts": [
       {
         "attempt": 1,
-        "elapsed_ms": 540,
+        "elapsed_ms": 848,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:54.532418+00:00"
+        "started_at_utc": "2026-10-09T13:33:30.855843+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 751,
+        "elapsed_ms": 696,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:55.322276+00:00"
+        "started_at_utc": "2026-10-09T13:33:31.953838+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 741,
+        "elapsed_ms": 657,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:56.323871+00:00"
+        "started_at_utc": "2026-10-09T13:33:32.899897+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 516,
+        "elapsed_ms": 522,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:57.315484+00:00"
+        "started_at_utc": "2026-10-09T13:33:33.807132+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 343,
+        "elapsed_ms": 329,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:58.082963+00:00"
+        "started_at_utc": "2026-10-09T13:33:34.580245+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 726,
+        "elapsed_ms": 637,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:58.680212+00:00"
+        "started_at_utc": "2026-10-09T13:33:35.162972+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 736,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:36.050644+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 651,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:37.036795+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 436,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:37.938164+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 324,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:38.626455+00:00"
       },
       {
         "attempt": 1,
         "elapsed_ms": 690,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:27:59.656229+00:00"
+        "started_at_utc": "2026-10-09T13:33:39.204374+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 750,
+        "elapsed_ms": 662,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:00.596322+00:00"
+        "started_at_utc": "2026-10-09T13:33:40.144481+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 539,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:41.056688+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 534,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:41.846309+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 323,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:42.632492+00:00"
       },
       {
         "attempt": 1,
         "elapsed_ms": 640,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:01.597101+00:00"
+        "started_at_utc": "2026-10-09T13:33:43.209945+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 342,
+        "elapsed_ms": 619,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:02.489530+00:00"
+        "started_at_utc": "2026-10-09T13:33:44.100037+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 770,
+        "elapsed_ms": 667,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:03.085453+00:00"
+        "started_at_utc": "2026-10-09T13:33:44.969791+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 459,
+        "elapsed_ms": 902,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:04.105310+00:00"
+        "started_at_utc": "2026-10-09T13:33:45.887384+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 652,
+        "elapsed_ms": 302,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:04.815014+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 574,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:05.717100+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 506,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:06.543135+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 713,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:07.302786+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 629,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:08.265697+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 741,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:09.145027+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 516,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:10.136741+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 316,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:10.905402+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 725,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:11.475650+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 434,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:12.450859+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 431,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:13.134922+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 603,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:13.816195+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 301,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:14.672035+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 595,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:15.227655+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 641,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:16.073308+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 785,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:16.965070+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 571,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:18.000780+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 389,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:18.824861+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 798,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:19.467982+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 695,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:20.516705+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 653,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:21.462619+00:00"
+        "started_at_utc": "2026-10-09T13:33:47.041812+00:00"
       },
       {
         "attempt": 1,
         "elapsed_ms": 420,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:22.366329+00:00"
+        "started_at_utc": "2026-10-09T13:33:47.598185+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 322,
+        "elapsed_ms": 450,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:23.039248+00:00"
+        "started_at_utc": "2026-10-09T13:33:48.269023+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 208,
+        "elapsed_ms": 634,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:23.616122+00:00"
+        "started_at_utc": "2026-10-09T13:33:48.969629+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 885,
+        "elapsed_ms": 863,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:24.073949+00:00"
+        "started_at_utc": "2026-10-09T13:33:49.854555+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 940,
+        "elapsed_ms": 316,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:25.209671+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 919,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:26.401097+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 671,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:27.570869+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 868,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:28.493098+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 885,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:29.611641+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 1021,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:30.747279+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 1102,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:32.018784+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 998,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:33.371454+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 935,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:34.620449+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 959,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:35.806801+00:00"
+        "started_at_utc": "2026-10-09T13:33:50.970315+00:00"
       },
       {
         "attempt": 1,
         "elapsed_ms": 631,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:37.016907+00:00"
+        "started_at_utc": "2026-10-09T13:33:51.540962+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 892,
+        "elapsed_ms": 559,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:37.898828+00:00"
+        "started_at_utc": "2026-10-09T13:33:52.422535+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 964,
+        "elapsed_ms": 730,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:39.041887+00:00"
+        "started_at_utc": "2026-10-09T13:33:53.232310+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 315,
+        "elapsed_ms": 545,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:40.464630+00:00"
+        "started_at_utc": "2026-10-09T13:33:54.213332+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 207,
+        "elapsed_ms": 310,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:41.029524+00:00"
+        "started_at_utc": "2026-10-09T13:33:55.011585+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 748,
+        "elapsed_ms": 479,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:41.487213+00:00"
+        "started_at_utc": "2026-10-09T13:33:55.576516+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 728,
+        "elapsed_ms": 424,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:42.485615+00:00"
+        "started_at_utc": "2026-10-09T13:33:56.306320+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 909,
+        "elapsed_ms": 410,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:43.464497+00:00"
+        "started_at_utc": "2026-10-09T13:33:56.981371+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 720,
+        "elapsed_ms": 544,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:44.624482+00:00"
+        "started_at_utc": "2026-10-09T13:33:57.642266+00:00"
       },
       {
         "attempt": 1,
-        "elapsed_ms": 710,
+        "elapsed_ms": 307,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:45.595198+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 529,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:46.556091+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 762,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:47.336483+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 1409,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:48.349038+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 837,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:50.009191+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 734,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:51.096703+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 756,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:52.081668+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 412,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:53.088981+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 1040,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:53.752210+00:00"
-      },
-      {
-        "attempt": 1,
-        "elapsed_ms": 674,
-        "http_status": 200,
-        "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:55.043090+00:00"
+        "started_at_utc": "2026-10-09T13:33:58.439743+00:00"
       },
       {
         "attempt": 1,
         "elapsed_ms": 206,
         "http_status": 200,
         "outcome": "success",
-        "started_at_utc": "2026-10-09T13:28:56.169881+00:00"
+        "started_at_utc": "2026-10-09T13:33:59.001649+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 945,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:33:59.457881+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 963,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:00.653844+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 899,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:01.868143+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 918,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:03.017654+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 879,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:04.187127+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 984,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:05.317373+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 998,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:06.552827+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 643,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:07.801244+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 902,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:08.695493+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 915,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:09.848465+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 932,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:11.013977+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 692,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:12.196680+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 1091,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:13.139291+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 1306,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:14.481024+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 209,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:16.236220+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 199,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:16.695945+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 685,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:17.144895+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 919,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:18.080918+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 751,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:19.250604+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 430,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:20.251987+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 756,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:20.932640+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 360,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:21.939715+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 1002,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:22.550686+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 691,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:23.803572+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 763,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:24.745290+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 953,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:25.759010+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 918,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:26.963336+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 712,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:28.131818+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 739,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:29.094432+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 663,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:30.083972+00:00"
+      },
+      {
+        "attempt": 1,
+        "elapsed_ms": 198,
+        "http_status": 200,
+        "outcome": "success",
+        "started_at_utc": "2026-10-09T13:34:31.183079+00:00"
       }
     ],
     "market_day_coverage_median": 1.0,
